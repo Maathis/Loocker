@@ -40,7 +40,12 @@ const router = createBrowserRouter([
       path: "/",
       element: <Dashboard name='Mathis'></Dashboard>,
     },
-  ]);
+]);
+
+window.electron.getVersion().then(version => {
+    window.appVersion = version;
+});
+  
 
 const root = createRoot(document.getElementById("root"));
 root.render(<RouterProvider router={router} />);

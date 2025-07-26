@@ -36,7 +36,7 @@ class RecipeConfigurator extends React.Component<{}, State> {
   getAppVersion() {
     try {
       // Assumes preload exposes electron.version via contextBridge
-      return (window as any).electron?.version || "1.0.0";
+      return (window as any).appVersion || "1.0.0";
     } catch {
       return "1.0.0";
     }
