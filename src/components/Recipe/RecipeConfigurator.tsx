@@ -1,0 +1,260 @@
+import React from "react";
+import StepItem from "./StepItem";
+
+export interface Step {
+  id: string;
+  type: string;         // symmetric or asymmetric or empty string
+  algorithm?: string;   // e.g., "aes", "rsa"
+  keyType?: string;     // "passphrase" or "keyfile"
+  passphrase?: string;  // stored passphrase if keyType === "passphrase"
+  keyFileName?: string; // file name if keyType === "keyfile"
+  keyFileContent?: string; // base64 or text content of key file
+}
+
+interface Props {
+  onUpdateRecipe: (newData: Step[]) => void;
+}
+
+interface State extends Props {
+  steps: Step[];
+  dragIndex: number | null;
+  recipeName: string;
+  version: string;
+  exportModalOpen: boolean;
+  exportIncludePassphrase: boolean;
+  exportIncludeKeyFiles: boolean;
+}
+
+let idCounter = 1;
+
+class RecipeConfigurator extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      steps: [{ id: "step-1", type: "", algorithm: undefined, keyType: undefined }],
+      dragIndex: null,
+      recipeName: "My Recipe",
+      version: this.getAppVersion(),
+      onUpdateRecipe: props.onUpdateRecipe,
+      exportModalOpen: false,
+      exportIncludePassphrase: false,
+      exportIncludeKeyFiles: false,
+    };
+  }
+
+  componentDidUpdate(prevProps: Props, prevState: State) {
+    if (prevState.steps !== this.state.steps) {
+      this.props.onUpdateRecipe(this.state.steps);
+    }
+  }
+
+  getAppVersion() {
+    try {
+      return (window as any).appVersion || "1.0.0";
+    } catch {
+      return "1.0.0";
+    }
+  }
+
+  handleTypeChange = (index: number, value: string) => {
+    const steps = [...this.state.steps];
+    steps[index].type = value;
+    delete steps[index].algorithm;
+    delete steps[index].keyType;
+    delete steps[index].passphrase;
+    delete steps[index].keyFileName;
+    delete steps[index].keyFileContent;
+    this.setState({ steps });
+  };
+
+  handleAlgorithmChange = (index: number, value: string) => {
+    const steps = [...this.state.steps];
+    steps[index].algorithm = value;
+    this.setState({ steps });
+  };
+
+  handleKeyTypeChange = (index: number, value: string) => {
+    const steps = [...this.state.steps];
+    steps[index].keyType = value;
+    delete steps[index].passphrase;
+    delete steps[index].keyFileName;
+    delete steps[index].keyFileContent;
+    this.setState({ steps });
+  };
+
+  handlePassphraseChange = (index: number, value: string) => {
+    const steps = [...this.state.steps];
+    steps[index].passphrase = value;
+    this.setState({ steps });
+  };
+
+  handleKeyFileChange = (index: number, fileName: string, fileContent: string) => {
+    const steps = [...this.state.steps];
+    steps[index].keyFileName = fileName;
+    steps[index].keyFileContent = fileContent;
+    this.setState({ steps });
+  };
+
+  handleRemove = (index: number) => {
+    const steps = [...this.state.steps];
+    steps.splice(index, 1);
+    this.setState({ steps });
+  };
+
+  handleAddStep = () => {
+    const newStep: Step = { id: `step-${++idCounter}`, type: "", algorithm: undefined, keyType: undefined };
+    this.setState((prev) => ({
+      steps: [...prev.steps, newStep],
+    }));
+  };
+
+  handleDragStart = (index: number) => {
+    this.setState({ dragIndex: index });
+  };
+
+  handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  handleDrop = (dropIndex: number) => {
+    const { dragIndex, steps } = this.state;
+    if (dragIndex === null || dragIndex === dropIndex) return;
+
+    const updatedSteps = [...steps];
+    const [draggedItem] = updatedSteps.splice(dragIndex, 1);
+    updatedSteps.splice(dropIndex, 0, draggedItem);
+
+    this.setState({ steps: updatedSteps, dragIndex: null });
+  };
+
+  openExportModal = () => {
+    this.setState({ exportModalOpen: true });
+  };
+
+  closeExportModal = () => {
+    this.setState({ exportModalOpen: false });
+  };
+
+  exportRecipe = () => {
+    const { recipeName, version, steps, exportIncludePassphrase, exportIncludeKeyFiles } = this.state;
+    const values = steps.map((step) => {
+      const base: any = {
+        type: step.type,
+        algorithm: step.algorithm,
+        keyType: step.keyType,
+      };
+      if (exportIncludePassphrase && step.keyType === "passphrase") {
+        base.passphrase = step.passphrase;
+      }
+      if (exportIncludeKeyFiles && step.keyType === "keyfile") {
+        base.keyFileName = step.keyFileName;
+        base.keyFileContent = step.keyFileContent;
+      }
+      return base;
+    });
+
+    const exportData = {
+      recipeName,
+      version,
+      steps: values,
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${recipeName.replace(/\s+/g, "_")}_export.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    this.closeExportModal();
+  };
+
+  renderExportModal = () => {
+    const { exportModalOpen, exportIncludePassphrase, exportIncludeKeyFiles } = this.state;
+    if (!exportModalOpen) return null;
+
+    return (
+      <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+          <h3 className="text-lg font-semibold mb-4">Export Options</h3>
+          <label className="flex items-center gap-2 mb-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={exportIncludePassphrase}
+              onChange={(e) => this.setState({ exportIncludePassphrase: e.target.checked })}
+            />
+            <span>Include Passphrases</span>
+          </label>
+          <label className="flex items-center gap-2 mb-4 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={exportIncludeKeyFiles}
+              onChange={(e) => this.setState({ exportIncludeKeyFiles: e.target.checked })}
+            />
+            <span>Include Key Files (content included)</span>
+          </label>
+          <div className="flex justify-end gap-2">
+            <button
+              className="btn btn-outline"
+              onClick={this.closeExportModal}
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={this.exportRecipe}
+              type="button"
+            >
+              Export
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  render() {
+    const { steps } = this.state;
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Recipe Configurator</h2>
+          <button className="btn btn-primary" onClick={this.handleAddStep} type="button">
+            Add Step
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {steps.map((step, index) => (
+            <StepItem
+              key={step.id}
+              step={step}
+              index={index}
+              onTypeChange={this.handleTypeChange}
+              onAlgorithmChange={this.handleAlgorithmChange}
+              onKeyTypeChange={this.handleKeyTypeChange}
+              onPassphraseChange={this.handlePassphraseChange}
+              onKeyFileChange={this.handleKeyFileChange}
+              onRemove={this.handleRemove}
+              onDragStart={this.handleDragStart}
+              onDragOver={this.handleDragOver}
+              onDrop={this.handleDrop}
+            />
+          ))}
+        </div>
+
+        <div className="mt-8">
+          <button className="btn btn-secondary" onClick={this.openExportModal} type="button">
+            Export Recipe
+          </button>
+        </div>
+
+        {this.renderExportModal()}
+      </div>
+    );
+  }
+}
+
+export default RecipeConfigurator;

@@ -1,16 +1,29 @@
 import React, { ChangeEvent } from "react";
 import { X } from "lucide-react"; // Optional: Use Lucide for a nice cross icon (optional)
 
-interface FilesSelectorState {
+
+interface Props {
+  onUpdateFiles: (newData: File[]) => void;
+}
+
+interface FilesSelectorState extends Props {
   files: File[];
 }
 
-class FilesSelector extends React.Component<{}, FilesSelectorState> {
-  constructor(props: {}) {
+class FilesSelector extends React.Component<Props, FilesSelectorState> {
+  
+  constructor(props: Props) {
     super(props);
     this.state = {
       files: [],
+      onUpdateFiles: props.onUpdateFiles
     };
+  }
+
+  componentDidUpdate(prevProps: Props, prevState: FilesSelectorState) {
+    if (prevState.files !== this.state.files) {
+      this.props.onUpdateFiles(this.state.files);
+    }
   }
 
   handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
