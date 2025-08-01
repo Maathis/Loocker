@@ -3,6 +3,7 @@ import { GripVertical, Trash2, Eye, EyeOff } from "lucide-react";
 import KeyFileInput from "./KeyFileInput";
 import GenerateKeyModal from "./GenerateKeyModal";
 import { Step } from "./RecipeConfigurator";
+import { ALGORITHMS, ENCRYPTION_TYPES, KEY_TYPES } from "./RecipeAlgorithm";
 
 interface Props {
   step: Step;
@@ -18,27 +19,6 @@ interface Props {
   onDrop: (index: number) => void;
 }
 
-const ENCRYPTION_TYPES = [
-  { value: "symmetric", label: "Symmetric" },
-  { value: "asymmetric", label: "Asymmetric" },
-];
-
-const ALGORITHMS = {
-  symmetric: [
-    { value: "aes", label: "AES" },
-    { value: "des", label: "DES" },
-  ],
-  asymmetric: [
-    { value: "rsa", label: "RSA" },
-    { value: "ecdsa", label: "ECDSA" },
-  ],
-};
-
-const KEY_TYPES = [
-  { value: "passphrase", label: "Passphrase" },
-  { value: "keyfile", label: "Key File" },
-];
-
 const StepItem: React.FC<Props> = ({
   step,
   index,
@@ -52,7 +32,11 @@ const StepItem: React.FC<Props> = ({
   onDragOver,
   onDrop,
 }) => {
-  const algorithmsForType = step.type ? ALGORITHMS[step.type as keyof typeof ALGORITHMS] : [];
+  const algorithmsForType = step.type
+  ? ALGORITHMS[step.type as keyof typeof ALGORITHMS]
+  : {};
+
+  const algorithmKeys = Object.keys(algorithmsForType);
 
   const [showPassphrase, setShowPassphrase] = useState(false);
   const [isGenerateModalOpen, setGenerateModalOpen] = useState(false);
@@ -72,12 +56,10 @@ const StepItem: React.FC<Props> = ({
         onDrop={() => onDrop(index)}
       >
         <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
-          {/* Drag Handle */}
           <div className="text-gray-400 cursor-move">
             <GripVertical className="w-5 h-5" />
           </div>
 
-          {/* Encryption Type */}
           <select
             className="select select-bordered w-full sm:w-40"
             value={step.type}
@@ -93,25 +75,29 @@ const StepItem: React.FC<Props> = ({
             ))}
           </select>
 
-          {/* Algorithm - only show if type selected */}
           {step.type && (
             <select
               className="select select-bordered w-full sm:w-40"
               value={step.algorithm || ""}
-              onChange={(e) => onAlgorithmChange(index, e.target.value)}
+              onChange={(e) => {
+                const selectedKey = e.target.value;
+                const selectedAlg = algorithmsForType[selectedKey];
+                if (selectedAlg) {
+                  onAlgorithmChange(index, selectedKey); // Just pass the string
+                }
+              }}
             >
               <option value="" disabled>
                 Select algorithm
               </option>
-              {algorithmsForType.map((alg) => (
-                <option key={alg.value} value={alg.value}>
-                  {alg.label}
+              {algorithmKeys.map((key) => (
+                <option key={key} value={key}>
+                  {algorithmsForType[key].getLabel()}
                 </option>
               ))}
             </select>
           )}
 
-          {/* Key Type - only show if algorithm selected */}
           {step.algorithm && (
             <select
               className="select select-bordered w-full sm:w-40"
@@ -130,7 +116,6 @@ const StepItem: React.FC<Props> = ({
           )}
         </div>
 
-        {/* Key input (passphrase or keyfile) */}
         <div className="flex items-center w-full sm:w-auto mt-3 sm:mt-0">
           {step.keyType === "passphrase" && (
             <div className="relative w-full max-w-xs">
@@ -162,7 +147,6 @@ const StepItem: React.FC<Props> = ({
           )}
         </div>
 
-        {/* Remove Button */}
         <button
           className="btn btn-sm btn-circle btn-ghost hover:bg-error hover:text-white text-gray-500"
           onClick={() => onRemove(index)}
@@ -171,25 +155,18 @@ const StepItem: React.FC<Props> = ({
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
-
-        <GenerateKeyModal
+{/* 
+      <GenerateKeyModal
         encryptionType={step.algorithm}
         isOpen={isGenerateModalOpen}
         onClose={() => setGenerateModalOpen(false)}
         onGenerate={(name, content) => {
-            console.log("Generated key filename:", name);
-            console.log("Generated key content:", content);
-            // Save or use the generated key
+          onKeyFileChange(index, name, content);
         }}
         onSelectFolder={async () => {
-            // Call Electron API or fallback:
-            // Example:
-            // const result = await window.api.selectFolder();
-            // return result;
-            return null;
+          return null;
         }}
-        />
-
+      /> */}
     </>
   );
 };
