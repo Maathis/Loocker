@@ -1,21 +1,21 @@
 import React from 'react';
 
-interface ExportModalProps {
+interface SaveDecryptModalProps {
   files: File[];
   visible: boolean;
   onClose: () => void;
   onExport: (method: string, files: File[], folderHandle?: FileSystemDirectoryHandle) => void;
 }
 
-interface ExportModalState {
+interface SaveDecryptModalState {
   selectedMethod: string;
   folderHandle?: FileSystemDirectoryHandle; // For local folder handle
   folderName?: string;
   exporting: boolean;
 }
 
-export class ExportModal extends React.Component<ExportModalProps, ExportModalState> {
-  constructor(props: ExportModalProps) {
+export class SaveDecryptModal extends React.Component<SaveDecryptModalProps, SaveDecryptModalState> {
+  constructor(props: SaveDecryptModalProps) {
     super(props);
     this.state = {
       selectedMethod: 'local',
