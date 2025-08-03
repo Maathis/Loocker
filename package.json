@@ -10,7 +10,9 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "eslint --ext .ts,.tsx ."
+    "lint": "eslint --ext .ts,.tsx .",
+    "test": "docker run -it --rm -v ./:/work -w /work mcr.microsoft.com/playwright:v1.54.0-noble npm run docker:test",
+    "docker:test": "xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' npx playwright test"
   },
   "keywords": [],
   "author": {
@@ -28,12 +30,14 @@
     "@electron-forge/plugin-fuses": "^7.8.1",
     "@electron-forge/plugin-vite": "^7.8.1",
     "@electron/fuses": "^1.8.0",
+    "@playwright/test": "^1.54.2",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "daisyui": "^5.0.47",
     "electron": "37.2.4",
     "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.32.0",
+    "playwright": "^1.54.2",
     "ts-node": "^10.9.2",
     "typescript": "~4.5.4",
     "vite": "^5.4.19"
