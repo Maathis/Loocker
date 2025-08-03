@@ -1,16 +1,27 @@
-// types/encryption.ts
-export type KeySource = "passphrase" | "keyfile";
+export type KeySourceValue = "passphrase" | "keyfile";
+
+export type KeySource = Array<KeySourceValue> & {
+  0?: KeySourceValue;
+  1?: Exclude<KeySourceValue, typeof this[0]>;
+};
 
 export abstract class EncryptionAlgorithm {
 
   protected label: string;
 
-  constructor(value: string, label: string) {
+  protected keySource: KeySource;
+
+  constructor(value: string, label: string, keySource: KeySource) {
     this.label = label;
+    this.keySource = keySource;
   }
 
   getLabel(): string {
     return this.label;
+  }
+
+  getKeySource(): KeySource {
+    return this.keySource;
   }
 
   /**

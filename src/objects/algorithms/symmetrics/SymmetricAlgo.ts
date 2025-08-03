@@ -1,5 +1,5 @@
 // types/SymmetricAlgorithm.ts
-import { EncryptionAlgorithm } from "../EncryptionAlgorithm";
+import { EncryptionAlgorithm, KeySource } from "../EncryptionAlgorithm";
 
 /**
  * Abstract base class for symmetric algorithms using raw Buffer keys
@@ -7,8 +7,8 @@ import { EncryptionAlgorithm } from "../EncryptionAlgorithm";
 export abstract class SymmetricAlgorithm extends EncryptionAlgorithm {
   protected key: Buffer;
 
-  constructor(value: string, label: string) {
-    super(value, label);
+  constructor(value: string, label: string, keySource: KeySource) {
+    super(value, label, keySource);
   }
 
   setKey(key: Buffer) {

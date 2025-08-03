@@ -1,3 +1,4 @@
+import { KeySourceValue } from "src/objects/algorithms/EncryptionAlgorithm";
 import { AESGCMAlgorithm } from "../../objects/algorithms/symmetrics/AESGCMA";
 
 export const ENCRYPTION_TYPES = [
@@ -18,7 +19,7 @@ export const ALGORITHMS: Record<
 };
 
 
-export const KEY_TYPES = [
-    { value: "passphrase", label: "Passphrase" },
-    { value: "keyfile", label: "Key File" },
-];
+export const KEY_TYPES: Record<KeySourceValue, { label: string }> = {
+  passphrase: { label: "Passphrase" },
+  keyfile: { label: "Key File" },
+};

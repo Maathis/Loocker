@@ -4,6 +4,7 @@ import KeyFileInput from "./KeyFileInput";
 import GenerateKeyModal from "./GenerateKeyModal";
 import { Step } from "./RecipeConfigurator";
 import { ALGORITHMS, ENCRYPTION_TYPES, KEY_TYPES } from "./RecipeAlgorithm";
+import { KeySourceValue } from "src/objects/algorithms/EncryptionAlgorithm";
 
 interface Props {
   step: Step;
@@ -33,8 +34,8 @@ const StepItem: React.FC<Props> = ({
   onDrop,
 }) => {
   const algorithmsForType = step.type
-  ? ALGORITHMS[step.type as keyof typeof ALGORITHMS]
-  : {};
+    ? ALGORITHMS[step.type as keyof typeof ALGORITHMS]
+    : {};
 
   const algorithmKeys = Object.keys(algorithmsForType);
 
@@ -107,11 +108,13 @@ const StepItem: React.FC<Props> = ({
               <option value="" disabled>
                 Select key type
               </option>
-              {KEY_TYPES.map((key) => (
-                <option key={key.value} value={key.value}>
-                  {key.label}
+
+              {algorithmsForType[step.algorithm].getKeySource().map((value: KeySourceValue) => (
+                <option key={value} value={value}>
+                  {KEY_TYPES[value].label}
                 </option>
               ))}
+
             </select>
           )}
         </div>
@@ -155,8 +158,9 @@ const StepItem: React.FC<Props> = ({
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
-{/* 
-      <GenerateKeyModal
+
+      {/* Uncomment and adapt if you want to enable the modal again */}
+      {/* <GenerateKeyModal
         encryptionType={step.algorithm}
         isOpen={isGenerateModalOpen}
         onClose={() => setGenerateModalOpen(false)}
