@@ -1,4 +1,4 @@
-import { AESGCMAlgorithm } from "./algorithms/symmetrics/AESGCMA";
+import { AESGCMAlgorithm } from "../../objects/algorithms/symmetrics/AESGCMA";
 
 export const ENCRYPTION_TYPES = [
     { value: "symmetric", label: "Symmetric" },

@@ -175,7 +175,7 @@ class RecipeConfigurator extends React.Component<Props, State> {
     if (!exportModalOpen) return null;
 
     return (
-      <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
           <h3 className="text-lg font-semibold mb-4">Export Options</h3>
           <label className="flex items-center gap-2 mb-3 cursor-pointer">
@@ -183,6 +183,7 @@ class RecipeConfigurator extends React.Component<Props, State> {
               type="checkbox"
               checked={exportIncludePassphrase}
               onChange={(e) => this.setState({ exportIncludePassphrase: e.target.checked })}
+              className="checkbox checkbox-primary"
             />
             <span>Include Passphrases</span>
           </label>
@@ -191,6 +192,7 @@ class RecipeConfigurator extends React.Component<Props, State> {
               type="checkbox"
               checked={exportIncludeKeyFiles}
               onChange={(e) => this.setState({ exportIncludeKeyFiles: e.target.checked })}
+              className="checkbox checkbox-primary"
             />
             <span>Include Key Files (content included)</span>
           </label>
@@ -218,14 +220,18 @@ class RecipeConfigurator extends React.Component<Props, State> {
   render() {
     const { steps } = this.state;
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Recipe Configurator</h2>
-          <button className="btn btn-primary" onClick={this.handleAddStep} type="button">
+      <div className="max-w-5xl mx-auto p-6 sm:p-4 w-full">
+        {/* Header with Add Step */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center sm:text-left w-full sm:w-auto">
+            Recipe Configurator
+          </h2>
+          <button className="btn btn-primary w-full sm:w-auto" onClick={this.handleAddStep} type="button">
             Add Step
           </button>
         </div>
 
+        {/* Steps List */}
         <div className="space-y-4">
           {steps.map((step, index) => (
             <StepItem
@@ -245,8 +251,13 @@ class RecipeConfigurator extends React.Component<Props, State> {
           ))}
         </div>
 
-        <div className="mt-8">
-          <button className="btn btn-secondary" onClick={this.openExportModal} type="button">
+        {/* Export button */}
+        <div className="mt-8 flex justify-center sm:justify-start">
+          <button
+            className="btn btn-secondary w-full sm:w-auto"
+            onClick={this.openExportModal}
+            type="button"
+          >
             Export Recipe
           </button>
         </div>

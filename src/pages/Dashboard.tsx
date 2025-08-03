@@ -1,9 +1,18 @@
 import React from "react";
-import RecipeConfigurator, { Step } from "../components/Recipe/RecipeConfigurator";
-import FilesSelector from "../components/FilesSelector";
+import RecipeConfigurator, { Step } from "../components/recipe/RecipeConfigurator";
+import FilesSelector from "../components/fileselector/FilesSelector";
 import { SaveEncryptModal } from "../components/SaveEncryptModal";
 import { SaveDecryptModal } from "../components/SaveDecryptModal";
-import { ALGORITHMS } from "../components/Recipe/RecipeAlgorithm";
+import { ALGORITHMS } from "../components/recipe/RecipeAlgorithm";
+
+interface State {
+  files: File[];
+  steps: Step[];
+  isSaveEncryptModalOpen: boolean;
+  isSaveDecryptModalOpen: boolean;
+  filesSelected: boolean; // tracks if files selected (for animation)
+}
+
 
 interface State {
   files: File[];
@@ -12,7 +21,7 @@ interface State {
   isSaveDecryptModalOpen: boolean;
 }
 
-export async function encryptFileWithRecipe(file: File, steps: Step[]): Promise<File> {
+async function encryptFileWithRecipe(file: File, steps: Step[]): Promise<File> {
   let fileData = await file.arrayBuffer();
   let dataToEncrypt: Uint8Array = new Uint8Array(fileData);
 
@@ -38,7 +47,7 @@ export async function encryptFileWithRecipe(file: File, steps: Step[]): Promise<
   return new File([dataToEncrypt], file.name + ".enc", { type: "application/octet-stream" });
 }
 
-export async function decryptFileWithRecipe(file: File, steps: Step[]): Promise<File> {
+async function decryptFileWithRecipe(file: File, steps: Step[]): Promise<File> {
   let fileData = await file.arrayBuffer();
   let dataToDecrypt: Uint8Array = new Uint8Array(fileData);
 
@@ -75,7 +84,7 @@ export async function decryptFileWithRecipe(file: File, steps: Step[]): Promise<
   return new File([dataToDecrypt], filenameOutput, { type: "application/octet-stream" });
 }
 
-export async function exportEncryptFilesToLocalFolder(
+async function exportEncryptFilesToLocalFolder(
   files: File[],
   folderHandle: FileSystemDirectoryHandle,
   steps: Step[]
@@ -95,7 +104,7 @@ export async function exportEncryptFilesToLocalFolder(
   }
 }
 
-export async function exportDecryptFilesToLocalFolder(
+async function exportDecryptFilesToLocalFolder(
   files: File[],
   folderHandle: FileSystemDirectoryHandle,
   steps: Step[]
@@ -115,6 +124,7 @@ export async function exportDecryptFilesToLocalFolder(
   }
 }
 
+
 export class Dashboard extends React.Component<{}, State> {
   constructor(props: {}) {
     super(props);
@@ -122,7 +132,8 @@ export class Dashboard extends React.Component<{}, State> {
       files: [],
       steps: [],
       isSaveEncryptModalOpen: false,
-      isSaveDecryptModalOpen: false
+      isSaveDecryptModalOpen: false,
+      filesSelected: false,
     };
   }
 
@@ -148,36 +159,104 @@ export class Dashboard extends React.Component<{}, State> {
     this.closeSaveDecryptModal();
   };
 
+  handleFilesUpdate = (files: File[]) => {
+    const hasFiles = files.length > 0;
+    // If files just selected, set filesSelected true to start animation
+    if (hasFiles && !this.state.filesSelected) {
+      this.setState({ files, filesSelected: true });
+    } else if (!hasFiles && this.state.filesSelected) {
+      // If no files, reset to initial state
+      this.setState({ files, filesSelected: false });
+    } else {
+      // Just update files if no change to selected state
+      this.setState({ files });
+    }
+  };
+
   render() {
+    const {
+      files,
+      steps,
+      filesSelected,
+      isSaveEncryptModalOpen,
+      isSaveDecryptModalOpen,
+    } = this.state;
+  
     return (
-      <>
-        <FilesSelector onUpdateFiles={(files) => this.setState({ files })} />
-        <RecipeConfigurator onUpdateRecipe={(steps) => this.setState({ steps })} />
-
-        <button onClick={this.openSaveEncryptModal} disabled={this.state.files.length === 0}>
-          Save encrypt files
-        </button>
-
-        <br />
-
-        <button onClick={this.openSaveDecryptModal} disabled={this.state.files.length === 0}>
-          Save decrypt Files
-        </button>
-
+      <div className="relative h-screen w-full bg-base-200 flex items-center justify-center overflow-hidden p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row w-full max-w-7xl mx-auto transition-all duration-700 ease-in-out gap-0 sm:gap-6">
+          {/* FilesSelector Panel */}
+          <div
+            className={`
+              transition-transform duration-700 ease-in-out
+              w-full sm:w-1/2 max-w-full
+              ${filesSelected ? "sm:translate-x-0" : "sm:translate-x-[50%]"}
+              flex justify-center
+            `}
+          >
+            <div className="w-full max-w-[720px]">
+              <FilesSelector onUpdateFiles={this.handleFilesUpdate} />
+            </div>
+          </div>
+  
+          {/* Divider (only if filesSelected and on sm and up) */}
+          {filesSelected && (
+            <div className="hidden sm:flex w-px bg-gray-300 my-4" />
+          )}
+  
+          {/* RecipeConfigurator Panel (slide in from right when files exist) */}
+          <div
+            className={`
+              transition-all duration-700 ease-in-out
+              w-full sm:w-1/2
+              transform ${filesSelected ? "opacity-100 translate-x-0" : "opacity-0 sm:translate-x-[50%]"}
+              pointer-events-${filesSelected ? "auto" : "none"}
+            `}
+          >
+            {filesSelected && (
+              <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 max-h-[85vh] overflow-auto">
+                <RecipeConfigurator
+                  onUpdateRecipe={(steps) => this.setState({ steps })}
+                />
+  
+                <div className="mt-8 flex gap-4 justify-center w-full max-w-md mx-auto">
+                  <button
+                    className="btn btn-primary"
+                    onClick={this.openSaveEncryptModal}
+                    disabled={files.length === 0}
+                  >
+                    Save encrypt files
+                  </button>
+  
+                  <button
+                    className="btn btn-secondary"
+                    onClick={this.openSaveDecryptModal}
+                    disabled={files.length === 0}
+                  >
+                    Save decrypt files
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+  
+        {/* Modals */}
         <SaveEncryptModal
-          visible={this.state.isSaveEncryptModalOpen}
-          files={this.state.files}
+          visible={isSaveEncryptModalOpen}
+          files={files}
           onClose={this.closeSaveEncryptModal}
           onExport={this.onExportEncrypt}
         />
-
+  
         <SaveDecryptModal
-          visible={this.state.isSaveDecryptModalOpen}
-          files={this.state.files}
+          visible={isSaveDecryptModalOpen}
+          files={files}
           onClose={this.closeSaveDecryptModal}
           onExport={this.onExportDecrypt}
         />
-      </>
+      </div>
     );
   }
+  
 }
