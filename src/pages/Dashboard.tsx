@@ -59,44 +59,30 @@ async function decryptFileWithRecipe(file: File, steps: Step[]): Promise<File> {
   let fileData = await file.arrayBuffer();
   let dataToDecrypt: Uint8Array = new Uint8Array(fileData);
 
-  console.log("decryptFileWithRecipe 1")
   for (const step of steps.slice().reverse()) {
-    console.log("decryptFileWithRecipe 2")
 
     if (!step.algorithm || !step.type || !step.keyType) continue;
-
-    console.log("decryptFileWithRecipe 3")
 
     const typeKey = step.type as keyof typeof ALGORITHMS;
     const algorithmKey = step.algorithm as keyof typeof ALGORITHMS[typeof typeKey];
     const algorithmInstance = ALGORITHMS[typeKey]?.[algorithmKey];
     if (!algorithmInstance) continue;
-    console.log("decryptFileWithRecipe 4")
-
-    
-    console.log("decryptFileWithRecipe 5")
     
     if(algorithmInstance instanceof SymmetricAlgorithm) {
       const keyMaterial = step.keyType === "passphrase" ? step.passphrase : step.keyFileContent;
       if (!keyMaterial) continue;
-      console.log("decryptFileWithRecipe 6")
 
-      const keyUint8 = typeof keyMaterial === 'string'
+      const keyBuffer = typeof keyMaterial === 'string'
         ? new TextEncoder().encode(keyMaterial)
         : keyMaterial;
       
-      const keyBuffer = Buffer.from(keyUint8);
-
       await (algorithmInstance as SymmetricAlgorithm).setKey(keyBuffer);
     } else {
-      console.log("decryptFileWithRecipe 7")
-
       await (algorithmInstance as AsymmetricAlgorithm).setPublicKey(step.publicKey);
       await (algorithmInstance as AsymmetricAlgorithm).setPrivateKey(step.privateKey);
     }
     
     dataToDecrypt = await algorithmInstance.decrypt(dataToDecrypt);
-    console.log("DataToDecrypt: ", dataToDecrypt);
   }
 
   let filenameOutput = file.name;

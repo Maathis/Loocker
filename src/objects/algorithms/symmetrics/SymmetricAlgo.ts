@@ -5,17 +5,17 @@ import { EncryptionAlgorithm, KeySource } from "../EncryptionAlgorithm";
  * Abstract base class for symmetric algorithms using raw Buffer keys
  */
 export abstract class SymmetricAlgorithm extends EncryptionAlgorithm {
-  protected key: Buffer;
+  protected key: Uint8Array;
 
   constructor(value: string, label: string, keySource: KeySource) {
     super(value, label, keySource);
   }
 
-  setKey(key: Buffer) {
+  setKey(key: Uint8Array) {
     this.key = key;
   }
 
-  getKey(): Buffer {
+  getKey(): Uint8Array {
     return this.key;
   }
 }
