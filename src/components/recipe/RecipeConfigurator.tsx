@@ -1,15 +1,25 @@
 import React from "react";
 import StepItem from "./StepItem";
+import { KeyRole } from "src/objects/algorithms/asymmetrics/AsymmetricAlgo";
 
 export interface Step {
   id: string;
-  type: string;         // symmetric or asymmetric or empty string
-  algorithm?: string;   // e.g., "aes", "rsa"
-  keyType?: string;     // "passphrase" or "keyfile"
-  passphrase?: string;  // stored passphrase if keyType === "passphrase"
-  keyFileName?: string; // file name if keyType === "keyfile"
-  keyFileContent?: string; // base64 or text content of key file
+  type: "symmetric" | "asymmetric" | "";  // encryption type
+  algorithm?: string;                     // e.g., "aes", "rsa"
+  keyType?: "passphrase" | "keyfile";     // key source type
+
+  // Passphrase (for symmetric)
+  passphrase?: string;                     // stored passphrase if keyType === "passphrase"
+
+  // Single key file (for symmetric keyfile)
+  keyFileName?: string;                    // file name if keyType === "keyfile" && symmetric
+  keyFileContent?: string;                 // base64 or text content of key file
+
+  // Asymmetric key files
+  publicKey?: CryptoKey;           // base64/text content of public key
+  privateKey?: CryptoKey;          // base64/text content of private key
 }
+
 
 interface Props {
   onUpdateRecipe: (newData: Step[]) => void;
@@ -58,7 +68,7 @@ class RecipeConfigurator extends React.Component<Props, State> {
 
   handleTypeChange = (index: number, value: string) => {
     const steps = [...this.state.steps];
-    steps[index].type = value;
+    steps[index].type = value as "" | "symmetric" | "asymmetric";
     delete steps[index].algorithm;
     delete steps[index].keyType;
     delete steps[index].passphrase;
@@ -75,7 +85,7 @@ class RecipeConfigurator extends React.Component<Props, State> {
 
   handleKeyTypeChange = (index: number, value: string) => {
     const steps = [...this.state.steps];
-    steps[index].keyType = value;
+    steps[index].keyType = value as "passphrase" | "keyfile";
     delete steps[index].passphrase;
     delete steps[index].keyFileName;
     delete steps[index].keyFileContent;
@@ -88,10 +98,18 @@ class RecipeConfigurator extends React.Component<Props, State> {
     this.setState({ steps });
   };
 
-  handleKeyFileChange = (index: number, fileName: string, fileContent: string) => {
+  handleKeyFileChange = (index: number, key: CryptoKey, keyRole?: KeyRole) => {
     const steps = [...this.state.steps];
-    steps[index].keyFileName = fileName;
-    steps[index].keyFileContent = fileContent;
+    if(steps[index].type === "asymmetric") {
+      if(keyRole == "public") {
+        steps[index].publicKey = key;
+      } else if(keyRole == "private") {
+        steps[index].privateKey = key;
+      }
+    // } else {
+    //   steps[index].keyFileName = fileName;
+    //   steps[index].keyFileContent = fileContent;
+    }
     this.setState({ steps });
   };
 

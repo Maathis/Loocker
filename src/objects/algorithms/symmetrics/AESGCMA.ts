@@ -6,7 +6,7 @@ export class AESGCMAlgorithm extends SymmetricAlgorithm {
   private cryptoKey: CryptoKey | null = null;
 
   constructor() {
-    super("aes256gcm", "AES-256-GCM", ["passphrase", "keyfile"]);
+    super("aes256gcm", "AES-256-GCM", ["passphrase"]);
   }
 
   private padKeyTo256Bits(key: Buffer): Uint8Array {
