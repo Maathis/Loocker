@@ -21,7 +21,6 @@ export interface Step {
   privateKey?: CryptoKey;          // base64/text content of private key
 }
 
-
 interface Props {
   onUpdateRecipe: (newData: Step[]) => void;
 }
@@ -107,9 +106,6 @@ class RecipeConfigurator extends React.Component<Props, State> {
       } else if(keyRole == "private") {
         steps[index].privateKey = key;
       }
-    // } else {
-    //   steps[index].keyFileName = fileName;
-    //   steps[index].keyFileContent = fileContent;
     }
     this.setState({ steps });
   };
@@ -157,7 +153,6 @@ class RecipeConfigurator extends React.Component<Props, State> {
   exportRecipe = async () => {
     const { recipeName, version, steps, exportIncludePassphrase, exportIncludeKeyFiles } = this.state;
     const values = await Promise.all(steps.map(async (step) => {
-      console.log("export recipe 1")
       const base: any = {
         type: step.type,
         algorithm: step.algorithm,
@@ -180,8 +175,6 @@ class RecipeConfigurator extends React.Component<Props, State> {
       return base;
     }));
 
-    console.log("steps : ", values)
-
     const exportData = {
       recipeName,
       version,
@@ -197,6 +190,51 @@ class RecipeConfigurator extends React.Component<Props, State> {
     link.click();
     URL.revokeObjectURL(url);
     this.closeExportModal();
+  };
+
+  // inside your class
+  importRecipe = async () => {
+    const filePath: string = await window.electron.openFileDialog({
+      filters: [{ name: "JSON", extensions: ["json"] }],
+    });
+
+    if (!filePath) return;
+
+    // read file contents via ipc
+    const fileContent: string = await window.electron.readFile(filePath);
+    const data = JSON.parse(fileContent);
+
+    const parsedSteps: Step[] = await Promise.all(
+      data.steps.map(async (step: any, idx: number) => {
+        const parsed: Step = {
+          id: `step-${idx + 1}`,
+          type: step.type,
+          algorithm: step.algorithm,
+          keyType: step.keyType,
+        };
+
+        if (step.keyType === "passphrase") {
+          parsed.passphrase = step.passphrase;
+        }
+
+        if (step.type === "asymmetric" && step.keyType === "keyfile") {
+          if (step.publicKey) {
+            parsed.publicKey = await RSAAlgorithm.pemToCryptoKey(step.publicKey, "public");
+          }
+          if (step.privateKey) {
+            parsed.privateKey = await RSAAlgorithm.pemToCryptoKey(step.privateKey, "private");
+          }
+        }
+
+        return parsed;
+      })
+    );
+
+    this.setState({
+      recipeName: data.recipeName || "Imported Recipe",
+      version: data.version || "1.0.0",
+      steps: parsedSteps,
+    });
   };
 
   renderExportModal = () => {
@@ -280,14 +318,20 @@ class RecipeConfigurator extends React.Component<Props, State> {
           ))}
         </div>
 
-        {/* Export button */}
-        <div className="mt-8 flex justify-center sm:justify-start">
+        <div className="mt-8 flex flex-col sm:flex-row gap-2">
           <button
             className="btn btn-secondary w-full sm:w-auto"
             onClick={this.openExportModal}
             type="button"
           >
             Export Recipe
+          </button>
+          <button
+            className="btn btn-outline w-full sm:w-auto"
+            onClick={this.importRecipe}
+            type="button"
+          >
+            Import Recipe
           </button>
         </div>
 

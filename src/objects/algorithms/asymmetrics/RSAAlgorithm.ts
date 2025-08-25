@@ -63,4 +63,15 @@ export class RSAAlgorithm extends AsymmetricAlgorithm {
     return buffer;
   }
 
+  public static async pemToCryptoKey(pem: string, role: KeyRole): Promise<CryptoKey> {
+    const keyBuffer = this.pemToArrayBuffer(pem);
+    return await crypto.subtle.importKey(
+      (role === "public" ? "spki" : "pkcs8"),
+      keyBuffer,
+      { name: "RSA-OAEP", hash: "SHA-256" },
+      true,
+      (role === "public" ? ["encrypt"] : ["decrypt"])
+    );
+  }
+
 }

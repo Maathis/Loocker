@@ -38,7 +38,7 @@ import { Dashboard } from './pages/Dashboard';
 const router = createBrowserRouter([
     {
       path: "/",
-      element: <Dashboard name='Mathis'></Dashboard>,
+      element: <Dashboard></Dashboard>,
     },
 ]);
 
