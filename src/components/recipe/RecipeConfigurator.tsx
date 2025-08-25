@@ -1,6 +1,7 @@
 import React from "react";
 import StepItem from "./StepItem";
 import { KeyRole } from "src/objects/algorithms/asymmetrics/AsymmetricAlgo";
+import { RSAAlgorithm } from "../../objects/algorithms/asymmetrics/RSAAlgorithm";
 
 export interface Step {
   id: string;
@@ -153,23 +154,33 @@ class RecipeConfigurator extends React.Component<Props, State> {
     this.setState({ exportModalOpen: false });
   };
 
-  exportRecipe = () => {
+  exportRecipe = async () => {
     const { recipeName, version, steps, exportIncludePassphrase, exportIncludeKeyFiles } = this.state;
-    const values = steps.map((step) => {
+    const values = await Promise.all(steps.map(async (step) => {
+      console.log("export recipe 1")
       const base: any = {
         type: step.type,
         algorithm: step.algorithm,
         keyType: step.keyType,
       };
+
       if (exportIncludePassphrase && step.keyType === "passphrase") {
         base.passphrase = step.passphrase;
       }
-      if (exportIncludeKeyFiles && step.keyType === "keyfile") {
-        base.keyFileName = step.keyFileName;
-        base.keyFileContent = step.keyFileContent;
+
+      if(step.type == "asymmetric") {
+        if (exportIncludeKeyFiles && step.keyType === "keyfile") {
+          const exportedPublicKey = await crypto.subtle.exportKey("spki", step.publicKey);
+          const exportedPrivateKey = await crypto.subtle.exportKey("pkcs8", step.privateKey);
+    
+          base.publicKey = RSAAlgorithm.arrayBufferToPem(exportedPublicKey, "public");
+          base.privateKey = RSAAlgorithm.arrayBufferToPem(exportedPrivateKey, "private");
+        }
       }
       return base;
-    });
+    }));
+
+    console.log("steps : ", values)
 
     const exportData = {
       recipeName,
