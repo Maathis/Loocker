@@ -30,7 +30,7 @@ html, body, #root {
 
 .window-controls {
   display: flex;
-  -webkit-app-region: no-drag; /* important to keep buttons clickable */
+  -webkit-app-region: no-drag;
 }
 
 .win-btn {
