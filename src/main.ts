@@ -1,13 +1,34 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, screen } from 'electron';
 import path from 'node:path';
 import fs from 'fs';
 import started from 'electron-squirrel-startup';
-
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
   app.quit();
 }
+
+let mainWindow: BrowserWindow | null = null
+
+ipcMain.handle("window-action", (_event, action: string) => {
+  if (!mainWindow) return
+  switch (action) {
+    case "minimize":
+      mainWindow.minimize()
+      break
+    case "maximize":
+      if(mainWindow.isMaximized()) {
+        mainWindow.unmaximize()
+      } else {
+        const { workArea } = screen.getPrimaryDisplay();
+        mainWindow.setBounds(workArea);
+      }
+      break
+    case "close":
+      mainWindow.close()
+      break
+  }
+})
 
 ipcMain.handle("get-app-version", () => {
   try {
@@ -36,9 +57,13 @@ ipcMain.handle("file:read", async (_, filePath: string) => {
 
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    frame: false,
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : undefined,
+    autoHideMenuBar: true,
+    useContentSize: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -53,6 +78,14 @@ const createWindow = () => {
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
+  
+  mainWindow.on('maximize', () => {
+    mainWindow.webContents.send("window-maximized");
+  });
+
+  mainWindow.on('unmaximize', () => {
+    mainWindow.webContents.send("window-unmaximized");
+  });
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
@@ -79,6 +112,3 @@ app.on('activate', () => {
     createWindow();
   }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
