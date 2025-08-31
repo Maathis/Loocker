@@ -1,3 +1,4 @@
+import './theme.css';
 import './index.css';
 
 import { createRoot } from 'react-dom/client';
@@ -6,7 +7,6 @@ import {
     RouterProvider,
   } from "react-router";
 import { Dashboard } from './pages/Dashboard';
-import { ipcRenderer } from 'electron';
 
 const router = createBrowserRouter([
     {

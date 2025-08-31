@@ -20,8 +20,7 @@ ipcMain.handle("window-action", (_event, action: string) => {
       if(mainWindow.isMaximized()) {
         mainWindow.unmaximize()
       } else {
-        const { workArea } = screen.getPrimaryDisplay();
-        mainWindow.setBounds(workArea);
+        mainWindow.maximize();
       }
       break
     case "close":

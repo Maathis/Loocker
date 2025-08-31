@@ -64,134 +64,142 @@ const StepItem: React.FC<Props> = ({
     <>
       <div
         key={step.id}
-        className="flex flex-col gap-3 bg-base-100 border border-base-200 rounded-xl p-4 shadow hover:shadow-md transition"
+        className="relative flex flex-col gap-3 border border-base-200 rounded-xl p-4 shadow hover:shadow-md transition bg-base-200"
         draggable
         onDragStart={() => onDragStart(index)}
         onDragOver={onDragOver}
         onDrop={() => onDrop(index)}
       >
-        {/* Top inline row */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center justify-center gap-3 w-full">
-          <div className="text-gray-400 cursor-move">
-            <GripVertical className="w-5 h-5" />
+        {/* GripVertical vertically centered */}
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 cursor-move text-base-content">
+          <GripVertical className="w-5 h-5" />
+        </div>
+
+        {/* Card content */}
+        <div className="flex flex-col gap-3 ml-10">
+          {/* Top row: selects */}
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-center gap-3 w-full">
+            {/* Encryption type */}
+            <select
+              className="select select-bordered w-full sm:w-40 bg-base-300 border-base-200 text-base-content"
+              value={step.type}
+              onChange={(e) => onTypeChange(index, e.target.value)}
+            >
+              <option value="" disabled>
+                Select encryption type
+              </option>
+              {ENCRYPTION_TYPES.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+
+            {/* Algorithm */}
+            {step.type && (
+              <select
+                className="select select-bordered w-full sm:w-40 bg-base-300 border-base-200 text-base-content"
+                value={step.algorithm || ""}
+                onChange={(e) => onAlgorithmChange(index, e.target.value)}
+              >
+                <option value="" disabled>
+                  Select algorithm
+                </option>
+                {algorithmKeys.map((key) => (
+                  <option key={key} value={key}>
+                    {algorithmsForType[key].getLabel()}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Key type */}
+            {step.algorithm && (
+              <select
+                className="select select-bordered w-full sm:w-40 bg-base-300 border-base-200 text-base-content"
+                value={step.keyType || ""}
+                onChange={(e) => onKeyTypeChange(index, e.target.value)}
+              >
+                <option value="" disabled>
+                  Select key type
+                </option>
+                {algorithmsForType[step.algorithm]
+                  .getKeySource()
+                  .map((value: string) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+              </select>
+            )}
           </div>
 
-          {/* Encryption type */}
-          <select
-            className="select select-bordered w-full sm:w-40"
-            value={step.type}
-            onChange={(e) => onTypeChange(index, e.target.value)}
-          >
-            <option value="" disabled>
-              Select encryption type
-            </option>
-            {ENCRYPTION_TYPES.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          {/* Center row: passphrase or keyfiles */}
+          <div className="flex justify-center w-full mt-2 gap-4 flex-wrap">
+            {step.keyType === "passphrase" && (
+              <div className="relative w-full max-w-xs">
+                <input
+                  type={showPassphrase ? "text" : "password"}
+                  placeholder="Enter passphrase"
+                  className="input input-bordered w-full pr-10 bg-base-300 border-base-200 text-base-content"
+                  value={step.passphrase || ""}
+                  onChange={(e) => onPassphraseChange(index, e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-primary hover:text-accent"
+                  onClick={() => setShowPassphrase(!showPassphrase)}
+                  aria-label={showPassphrase ? "Hide passphrase" : "Show passphrase"}
+                >
+                  {showPassphrase ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            )}
 
-          {/* Algorithm */}
-          {step.type && (
-            <select
-              className="select select-bordered w-full sm:w-40"
-              value={step.algorithm || ""}
-              onChange={(e) => onAlgorithmChange(index, e.target.value)}
-            >
-              <option value="" disabled>
-                Select algorithm
-              </option>
-              {algorithmKeys.map((key) => (
-                <option key={key} value={key}>
-                  {algorithmsForType[key].getLabel()}
-                </option>
-              ))}
-            </select>
-          )}
+            {step.type === "asymmetric" && step.keyType === "keyfile" && (
+              <>
+                <KeyFileInput
+                  stepIndex={index}
+                  label="Public Key"
+                  onChangeFile={(fileName, content) =>
+                    handleImportAsyncKey(index, fileName, content, "public")
+                  }
+                />
+                <KeyFileInput
+                  stepIndex={index}
+                  label="Private Key"
+                  onChangeFile={(fileName, content) =>
+                    handleImportAsyncKey(index, fileName, content, "private")
+                  }
+                />
 
-          {/* Key type */}
-          {step.algorithm && (
-            <select
-              className="select select-bordered w-full sm:w-40"
-              value={step.keyType || ""}
-              onChange={(e) => onKeyTypeChange(index, e.target.value)}
-            >
-              <option value="" disabled>
-                Select key type
-              </option>
-              {algorithmsForType[step.algorithm].getKeySource().map((value: KeySourceValue) => (
-                <option key={value} value={value}>
-                  {KEY_TYPES[value].label}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-
-        {/* Centered row for passphrase or keyfile */}
-        <div className="flex justify-center w-full mt-2 gap-4 flex-wrap">
-          {/* Passphrase input */}
-          {step.keyType === "passphrase" && (
-            <div className="relative w-full max-w-xs">
-              <input
-                type={showPassphrase ? "text" : "password"}
-                placeholder="Enter passphrase"
-                className="input input-bordered w-full pr-10"
-                value={step.passphrase || ""}
-                onChange={(e) => onPassphraseChange(index, e.target.value)}
-              />
-              <button
+                <button
                 type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                onClick={() => setShowPassphrase(!showPassphrase)}
-                aria-label={showPassphrase ? "Hide passphrase" : "Show passphrase"}
-              >
-                {showPassphrase ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-          )}
+                className="btn btn-sm btn-outline"
+                onClick={() => setGenerateModalOpen(true)}
+                aria-label={`Generate key pair`}
+                >
+                  Generate key pair
+                </button>
+              </>
 
-          {/* Symmetric / single keyfile
-          {step.keyType === "keyfile" && step.type !== "asymmetric" && (
-            <KeyFileInput
-              stepIndex={index}
-              keyFileName={step.keyFileName}
-              onChangeFile={(fileName, content) => onKeyFileChange(index, fileName, content)}
-              onOpenGenerateModal={() => setGenerateModalOpen(true)}
-            />
-          )} */}
+            )}
+          </div>
 
-          {/* Asymmetric: two key files */}
-          {step.type === "asymmetric" && step.keyType === "keyfile" && (
-            <>
-              <KeyFileInput
-                stepIndex={index}
-                label="Public Key"
-                onChangeFile={(fileName, content) => handleImportAsyncKey(index, fileName, content, "public")}
-                onOpenGenerateModal={() => setGenerateModalOpen(true)}
-              />
-              <KeyFileInput
-                stepIndex={index}
-                label="Private Key"
-                onChangeFile={(fileName, content) => handleImportAsyncKey(index, fileName, content, "private")}
-                onOpenGenerateModal={() => setGenerateModalOpen(true)}
-              />
-            </>
-          )}
-        </div>
-
-        {/* Remove button aligned right */}
-        <div className="flex justify-end">
-          <button
-            className="btn btn-sm btn-circle btn-ghost hover:bg-error hover:text-white text-gray-500"
-            onClick={() => onRemove(index)}
-            aria-label="Remove step"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {/* Remove button */}
+          <div className="flex justify-end">
+            <button
+              className="btn btn-sm btn-circle btn-ghost hover:bg-error hover:text-error-content text-base-content"
+              onClick={() => onRemove(index)}
+              aria-label="Remove step"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
+
+
 
       {/* Generate key modal */}
       <GenerateKeyModal

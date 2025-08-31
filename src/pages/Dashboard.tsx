@@ -213,7 +213,7 @@ export class Dashboard extends React.Component<{}, State> {
     
             {/* Divider (only if filesSelected and on sm and up) */}
             {filesSelected && (
-              <div className="hidden sm:flex w-px bg-gray-300 my-4" />
+              <div className="divider lg:divider-horizontal"></div>
             )}
     
             {/* RecipeConfigurator Panel (slide in from right when files exist) */}
@@ -226,11 +226,11 @@ export class Dashboard extends React.Component<{}, State> {
               `}
             >
               {filesSelected && (
-                <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 max-h-[85vh] overflow-auto">
+                <div className="bg-base-200 rounded-lg shadow-lg p-4 sm:p-6 max-h-[85vh] overflow-auto text-base-content">
                   <RecipeConfigurator
                     onUpdateRecipe={(steps) => this.setState({ steps })}
                   />
-    
+
                   <div className="mt-8 flex gap-4 justify-center w-full max-w-md mx-auto">
                     <button
                       className="btn btn-primary"
@@ -239,7 +239,7 @@ export class Dashboard extends React.Component<{}, State> {
                     >
                       Save encrypt files
                     </button>
-    
+
                     <button
                       className="btn btn-secondary"
                       onClick={this.openSaveDecryptModal}

@@ -34,8 +34,8 @@ export const GenerateKeyModal: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="p-6 bg-white rounded-2xl shadow-lg w-[500px] max-w-full">
-        <h2 className="text-xl font-bold mb-4 text-center">
+      <div className="p-6 bg-base-200 rounded-2xl shadow-lg w-[500px] max-w-full text-base-content">
+        <h2 className="text-xl font-bold mb-4 text-center text-primary">
           Generate {algorithmType === "symmetric" ? "Symmetric" : "Asymmetric"} Keys
         </h2>
 
@@ -44,7 +44,7 @@ export const GenerateKeyModal: React.FC<Props> = ({
         <div className="flex justify-end space-x-2">
           <button
             type="button"
-            className="btn btn-outline"
+            className="btn btn-outline text-base-content border-base-300 hover:bg-base-300"
             onClick={onClose}
           >
             Cancel

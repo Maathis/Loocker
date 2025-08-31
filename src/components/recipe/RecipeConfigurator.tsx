@@ -2,23 +2,18 @@ import React from "react";
 import StepItem from "./StepItem";
 import { KeyRole } from "src/objects/algorithms/asymmetrics/AsymmetricAlgo";
 import { RSAAlgorithm } from "../../objects/algorithms/asymmetrics/RSAAlgorithm";
+import { HardDriveDownload, Upload } from "lucide-react";
 
 export interface Step {
   id: string;
-  type: "symmetric" | "asymmetric" | "";  // encryption type
-  algorithm?: string;                     // e.g., "aes", "rsa"
-  keyType?: "passphrase" | "keyfile";     // key source type
-
-  // Passphrase (for symmetric)
-  passphrase?: string;                     // stored passphrase if keyType === "passphrase"
-
-  // Single key file (for symmetric keyfile)
-  keyFileName?: string;                    // file name if keyType === "keyfile" && symmetric
-  keyFileContent?: string;                 // base64 or text content of key file
-
-  // Asymmetric key files
-  publicKey?: CryptoKey;           // base64/text content of public key
-  privateKey?: CryptoKey;          // base64/text content of private key
+  type: "symmetric" | "asymmetric" | "";
+  algorithm?: string;
+  keyType?: "passphrase" | "keyfile";
+  passphrase?: string;
+  keyFileName?: string;
+  keyFileContent?: string;
+  publicKey?: CryptoKey;
+  privateKey?: CryptoKey;
 }
 
 interface Props {
@@ -66,6 +61,7 @@ class RecipeConfigurator extends React.Component<Props, State> {
     }
   }
 
+  // ===== Handlers (keep your existing logic) =====
   handleTypeChange = (index: number, value: string) => {
     const steps = [...this.state.steps];
     steps[index].type = value as "" | "symmetric" | "asymmetric";
@@ -100,12 +96,9 @@ class RecipeConfigurator extends React.Component<Props, State> {
 
   handleKeyFileChange = (index: number, key: CryptoKey, keyRole?: KeyRole) => {
     const steps = [...this.state.steps];
-    if(steps[index].type === "asymmetric") {
-      if(keyRole == "public") {
-        steps[index].publicKey = key;
-      } else if(keyRole == "private") {
-        steps[index].privateKey = key;
-      }
+    if (steps[index].type === "asymmetric") {
+      if (keyRole === "public") steps[index].publicKey = key;
+      else if (keyRole === "private") steps[index].privateKey = key;
     }
     this.setState({ steps });
   };
@@ -142,47 +135,26 @@ class RecipeConfigurator extends React.Component<Props, State> {
     this.setState({ steps: updatedSteps, dragIndex: null });
   };
 
-  openExportModal = () => {
-    this.setState({ exportModalOpen: true });
-  };
+  openExportModal = () => this.setState({ exportModalOpen: true });
+  closeExportModal = () => this.setState({ exportModalOpen: false });
 
-  closeExportModal = () => {
-    this.setState({ exportModalOpen: false });
-  };
-
+  // ===== Export / Import logic (keep existing) =====
   exportRecipe = async () => {
     const { recipeName, version, steps, exportIncludePassphrase, exportIncludeKeyFiles } = this.state;
     const values = await Promise.all(steps.map(async (step) => {
-      const base: any = {
-        type: step.type,
-        algorithm: step.algorithm,
-        keyType: step.keyType,
-      };
-
-      if (exportIncludePassphrase && step.keyType === "passphrase") {
-        base.passphrase = step.passphrase;
-      }
-
-      if(step.type == "asymmetric") {
-        if (exportIncludeKeyFiles && step.keyType === "keyfile") {
-          const exportedPublicKey = await crypto.subtle.exportKey("spki", step.publicKey);
-          const exportedPrivateKey = await crypto.subtle.exportKey("pkcs8", step.privateKey);
-    
-          base.publicKey = RSAAlgorithm.arrayBufferToPem(exportedPublicKey, "public");
-          base.privateKey = RSAAlgorithm.arrayBufferToPem(exportedPrivateKey, "private");
-        }
+      const base: any = { type: step.type, algorithm: step.algorithm, keyType: step.keyType };
+      if (exportIncludePassphrase && step.keyType === "passphrase") base.passphrase = step.passphrase;
+      if (step.type === "asymmetric" && step.keyType === "keyfile" && exportIncludeKeyFiles) {
+        const exportedPublicKey = await crypto.subtle.exportKey("spki", step.publicKey!);
+        const exportedPrivateKey = await crypto.subtle.exportKey("pkcs8", step.privateKey!);
+        base.publicKey = RSAAlgorithm.arrayBufferToPem(exportedPublicKey, "public");
+        base.privateKey = RSAAlgorithm.arrayBufferToPem(exportedPrivateKey, "private");
       }
       return base;
     }));
 
-    const exportData = {
-      recipeName,
-      version,
-      steps: values,
-    };
-
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
+    const exportData = { recipeName, version, steps: values };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -192,49 +164,23 @@ class RecipeConfigurator extends React.Component<Props, State> {
     this.closeExportModal();
   };
 
-  // inside your class
   importRecipe = async () => {
-    const filePath: string = await window.electron.openFileDialog({
-      filters: [{ name: "JSON", extensions: ["json"] }],
-    });
-
+    const filePath: string = await window.electron.openFileDialog({ filters: [{ name: "JSON", extensions: ["json"] }] });
     if (!filePath) return;
-
-    // read file contents via ipc
     const fileContent: string = await window.electron.readFile(filePath);
     const data = JSON.parse(fileContent);
 
-    const parsedSteps: Step[] = await Promise.all(
-      data.steps.map(async (step: any, idx: number) => {
-        const parsed: Step = {
-          id: `step-${idx + 1}`,
-          type: step.type,
-          algorithm: step.algorithm,
-          keyType: step.keyType,
-        };
+    const parsedSteps: Step[] = await Promise.all(data.steps.map(async (step: any, idx: number) => {
+      const parsed: Step = { id: `step-${idx + 1}`, type: step.type, algorithm: step.algorithm, keyType: step.keyType };
+      if (step.keyType === "passphrase") parsed.passphrase = step.passphrase;
+      if (step.type === "asymmetric" && step.keyType === "keyfile") {
+        if (step.publicKey) parsed.publicKey = await RSAAlgorithm.pemToCryptoKey(step.publicKey, "public");
+        if (step.privateKey) parsed.privateKey = await RSAAlgorithm.pemToCryptoKey(step.privateKey, "private");
+      }
+      return parsed;
+    }));
 
-        if (step.keyType === "passphrase") {
-          parsed.passphrase = step.passphrase;
-        }
-
-        if (step.type === "asymmetric" && step.keyType === "keyfile") {
-          if (step.publicKey) {
-            parsed.publicKey = await RSAAlgorithm.pemToCryptoKey(step.publicKey, "public");
-          }
-          if (step.privateKey) {
-            parsed.privateKey = await RSAAlgorithm.pemToCryptoKey(step.privateKey, "private");
-          }
-        }
-
-        return parsed;
-      })
-    );
-
-    this.setState({
-      recipeName: data.recipeName || "Imported Recipe",
-      version: data.version || "1.0.0",
-      steps: parsedSteps,
-    });
+    this.setState({ recipeName: data.recipeName || "Imported Recipe", version: data.version || "1.0.0", steps: parsedSteps });
   };
 
   renderExportModal = () => {
@@ -246,38 +192,16 @@ class RecipeConfigurator extends React.Component<Props, State> {
         <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
           <h3 className="text-lg font-semibold mb-4">Export Options</h3>
           <label className="flex items-center gap-2 mb-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={exportIncludePassphrase}
-              onChange={(e) => this.setState({ exportIncludePassphrase: e.target.checked })}
-              className="checkbox checkbox-primary"
-            />
+            <input type="checkbox" checked={exportIncludePassphrase} onChange={(e) => this.setState({ exportIncludePassphrase: e.target.checked })} className="checkbox checkbox-primary" />
             <span>Include Passphrases</span>
           </label>
           <label className="flex items-center gap-2 mb-4 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={exportIncludeKeyFiles}
-              onChange={(e) => this.setState({ exportIncludeKeyFiles: e.target.checked })}
-              className="checkbox checkbox-primary"
-            />
+            <input type="checkbox" checked={exportIncludeKeyFiles} onChange={(e) => this.setState({ exportIncludeKeyFiles: e.target.checked })} className="checkbox checkbox-primary" />
             <span>Include Key Files (content included)</span>
           </label>
           <div className="flex justify-end gap-2">
-            <button
-              className="btn btn-outline"
-              onClick={this.closeExportModal}
-              type="button"
-            >
-              Cancel
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={this.exportRecipe}
-              type="button"
-            >
-              Export
-            </button>
+            <button className="btn btn-outline" onClick={this.closeExportModal} type="button">Cancel</button>
+            <button className="btn btn-primary" onClick={this.exportRecipe} type="button">Export</button>
           </div>
         </div>
       </div>
@@ -286,16 +210,32 @@ class RecipeConfigurator extends React.Component<Props, State> {
 
   render() {
     const { steps } = this.state;
+
     return (
       <div className="max-w-5xl mx-auto p-6 sm:p-4 w-full">
-        {/* Header with Add Step */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center sm:text-left w-full sm:w-auto">
+        {/* Header: Title + Icon Buttons */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4 mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold">
             Recipe Configurator
           </h2>
-          <button className="btn btn-primary w-full sm:w-auto" onClick={this.handleAddStep} type="button">
-            Add Step
-          </button>
+
+          {/* Icon buttons on the right */}
+          <div className="flex gap-2">
+            <button
+              className="btn btn-sm btn-ghost p-2"
+              onClick={this.openExportModal}
+              aria-label="Export Recipe"
+            >
+              <HardDriveDownload className="w-5 h-5" />
+            </button>
+            <button
+              className="btn btn-sm btn-ghost p-2"
+              onClick={this.importRecipe}
+              aria-label="Import Recipe"
+            >
+              <Upload className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Steps List */}
@@ -318,20 +258,10 @@ class RecipeConfigurator extends React.Component<Props, State> {
           ))}
         </div>
 
-        <div className="mt-8 flex flex-col sm:flex-row gap-2">
-          <button
-            className="btn btn-secondary w-full sm:w-auto"
-            onClick={this.openExportModal}
-            type="button"
-          >
-            Export Recipe
-          </button>
-          <button
-            className="btn btn-outline w-full sm:w-auto"
-            onClick={this.importRecipe}
-            type="button"
-          >
-            Import Recipe
+        {/* Centered Add Step button */}
+        <div className="flex justify-center mt-4">
+          <button className="btn btn-soft btn-outline" onClick={this.handleAddStep} type="button">
+            Add Step
           </button>
         </div>
 

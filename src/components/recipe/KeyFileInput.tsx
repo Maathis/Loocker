@@ -4,14 +4,12 @@ interface Props {
   stepIndex: number;
   label?: string; // optional label for asymmetric keys
   onChangeFile: (fileName: string, fileContent: string) => void;
-  onOpenGenerateModal: () => void;
 }
 
 const KeyFileInput: React.FC<Props> = ({
   stepIndex,
   label,
-  onChangeFile,
-  onOpenGenerateModal,
+  onChangeFile
 }) => {
   const [localFileName, setLocalFileName] = useState("");
 
@@ -39,18 +37,6 @@ const KeyFileInput: React.FC<Props> = ({
         className="file-input file-input-bordered w-full"
         onChange={handleFileChange}
       />
-
-      {/* Divider */}
-      <div className="w-px h-8 bg-gray-300" />
-
-      <button
-        type="button"
-        className="btn btn-sm btn-outline"
-        onClick={onOpenGenerateModal}
-        aria-label={`Generate ${label || "Key"}`}
-      >
-        Generate
-      </button>
     </div>
   );
 };
