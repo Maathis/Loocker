@@ -33,7 +33,7 @@ export const GenerateKeyModal: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+    <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-black/20 z-50">
       <div className="p-6 bg-base-200 rounded-2xl shadow-lg w-[500px] max-w-full text-base-content">
         <h2 className="text-xl font-bold mb-4 text-center text-primary">
           Generate {algorithmType === "symmetric" ? "Symmetric" : "Asymmetric"} Keys

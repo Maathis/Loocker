@@ -188,20 +188,49 @@ class RecipeConfigurator extends React.Component<Props, State> {
     if (!exportModalOpen) return null;
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
-          <h3 className="text-lg font-semibold mb-4">Export Options</h3>
+      <div className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm bg-black/20">
+        <div className="bg-base-200 rounded-lg shadow-lg p-6 max-w-sm w-full text-base-content">
+          <h3 className="text-lg font-semibold mb-4 text-primary">Export Options</h3>
+
           <label className="flex items-center gap-2 mb-3 cursor-pointer">
-            <input type="checkbox" checked={exportIncludePassphrase} onChange={(e) => this.setState({ exportIncludePassphrase: e.target.checked })} className="checkbox checkbox-primary" />
+            <input
+              type="checkbox"
+              checked={exportIncludePassphrase}
+              onChange={(e) =>
+                this.setState({ exportIncludePassphrase: e.target.checked })
+              }
+              className="checkbox checkbox-primary"
+            />
             <span>Include Passphrases</span>
           </label>
+
           <label className="flex items-center gap-2 mb-4 cursor-pointer">
-            <input type="checkbox" checked={exportIncludeKeyFiles} onChange={(e) => this.setState({ exportIncludeKeyFiles: e.target.checked })} className="checkbox checkbox-primary" />
+            <input
+              type="checkbox"
+              checked={exportIncludeKeyFiles}
+              onChange={(e) =>
+                this.setState({ exportIncludeKeyFiles: e.target.checked })
+              }
+              className="checkbox checkbox-primary"
+            />
             <span>Include Key Files (content included)</span>
           </label>
+
           <div className="flex justify-end gap-2">
-            <button className="btn btn-outline" onClick={this.closeExportModal} type="button">Cancel</button>
-            <button className="btn btn-primary" onClick={this.exportRecipe} type="button">Export</button>
+            <button
+              className="btn btn-outline text-base-content border-base-300 hover:bg-base-300"
+              onClick={this.closeExportModal}
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={this.exportRecipe}
+              type="button"
+            >
+              Export
+            </button>
           </div>
         </div>
       </div>
