@@ -15,6 +15,7 @@ interface SaveEncryptModalState {
 }
 
 export class SaveEncryptModal extends React.Component<SaveEncryptModalProps, SaveEncryptModalState> {
+  
   constructor(props: SaveEncryptModalProps) {
     super(props);
     this.state = {
@@ -22,10 +23,6 @@ export class SaveEncryptModal extends React.Component<SaveEncryptModalProps, Sav
       exporting: false,
     };
   }
-
-  handleMethodChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    this.setState({ selectedMethod: event.target.value, folderHandle: undefined, folderName: undefined });
-  };
 
   pickFolder = async () => {
     try {
@@ -57,21 +54,6 @@ export class SaveEncryptModal extends React.Component<SaveEncryptModalProps, Sav
         <div className="modal modal-open">
           <div className="modal-box max-w-lg max-h-[80vh] overflow-auto">
             <h3 className="font-bold text-lg mb-4">Select Export Method</h3>
-
-            <div className="form-control w-full max-w-xs mb-4">
-              <label className="label">
-                <span className="label-text">Export method:</span>
-              </label>
-              <select
-                className="select select-bordered"
-                value={this.state.selectedMethod}
-                onChange={this.handleMethodChange}
-              >
-                <option value="local">Local</option>
-                <option value="googleDrive">Google Drive</option>
-                <option value="dropbox">Dropbox</option>
-              </select>
-            </div>
 
             {this.state.selectedMethod === 'local' && (
               <div className="mb-4">

@@ -7,13 +7,14 @@ import { ALGORITHMS } from "../components/recipe/RecipeAlgorithm";
 import { SymmetricAlgorithm } from "../objects/algorithms/symmetrics/SymmetricAlgo";
 import { AsymmetricAlgorithm } from "../objects/algorithms/asymmetrics/AsymmetricAlgo";
 import Titlebar from "../components/TitleBar";
+import { ModalContext, NotificationModalContextProps } from "../components/notification/NotificationModalContext";
 
 interface State {
   files: File[];
   steps: Step[];
   isSaveEncryptModalOpen: boolean;
   isSaveDecryptModalOpen: boolean;
-  filesSelected: boolean; // tracks if files selected (for animation)
+  filesSelected: boolean;
 }
 
 
@@ -97,6 +98,7 @@ async function decryptFileWithRecipe(file: File, steps: Step[]): Promise<File> {
 async function exportEncryptFilesToLocalFolder(
   files: File[],
   folderHandle: FileSystemDirectoryHandle,
+  showModal: NotificationModalContextProps['showModal'],
   steps: Step[]
 ) {
   if (!folderHandle) throw new Error("Folder handle is required");
@@ -108,8 +110,9 @@ async function exportEncryptFilesToLocalFolder(
       const writable = await fileHandle.createWritable();
       await writable.write(encryptedFile);
       await writable.close();
+      showModal("success", "File encrypted and saved", `File ${encryptedFile.name} encrypted and saved to ${folderHandle.name}`);
     } catch (error) {
-      console.error(`Failed to encrypt or save file ${file.name}:`, error);
+      showModal("error", "Failed to encrypt or save file", `Failed to encrypt or save file ${file.name}: ${error}`);
     }
   }
 }
@@ -117,6 +120,7 @@ async function exportEncryptFilesToLocalFolder(
 async function exportDecryptFilesToLocalFolder(
   files: File[],
   folderHandle: FileSystemDirectoryHandle,
+  showModal: NotificationModalContextProps['showModal'],
   steps: Step[]
 ) {
   if (!folderHandle) throw new Error("Folder handle is required");
@@ -128,14 +132,15 @@ async function exportDecryptFilesToLocalFolder(
       const writable = await fileHandle.createWritable();
       await writable.write(decryptedFile);
       await writable.close();
+      showModal("success", "File decrypted and saved", `File ${decryptedFile.name} decrypted and saved to ${folderHandle.name}`);
     } catch (error) {
-      console.error(`Failed to decrypt or save file ${file.name}:`, error);
+      showModal("error", "Failed to decrypt or save file", `Failed to decrypt or save file ${file.name}: ${error}`);
     }
   }
 }
 
-
 export class Dashboard extends React.Component<{}, State> {
+
   constructor(props: {}) {
     super(props);
     this.state = {
@@ -153,18 +158,16 @@ export class Dashboard extends React.Component<{}, State> {
   openSaveDecryptModal = () => this.setState({ isSaveDecryptModalOpen: true });
   closeSaveDecryptModal = () => this.setState({ isSaveDecryptModalOpen: false });
 
-  onExportEncrypt = async (method: string, files: File[], folderHandle?: FileSystemDirectoryHandle) => {
+  onExportEncrypt = async (method: string, files: File[], showModal: NotificationModalContextProps['showModal'], folderHandle?: FileSystemDirectoryHandle) => {
     if (method === 'local' && folderHandle) {
-      await exportEncryptFilesToLocalFolder(files, folderHandle, this.state.steps);
-      alert('Files exported locally!');
+      await exportEncryptFilesToLocalFolder(files, folderHandle, showModal, this.state.steps);
     }
     this.closeSaveEncryptModal();
   };
 
-  onExportDecrypt = async (method: string, files: File[], folderHandle?: FileSystemDirectoryHandle) => {
+  onExportDecrypt = async (method: string, files: File[], showModal: NotificationModalContextProps['showModal'], folderHandle?: FileSystemDirectoryHandle) => {
     if (method === 'local' && folderHandle) {
-      await exportDecryptFilesToLocalFolder(files, folderHandle, this.state.steps);
-      alert('Files exported locally!');
+      await exportDecryptFilesToLocalFolder(files, folderHandle, showModal, this.state.steps);
     }
     this.closeSaveDecryptModal();
   };
@@ -193,82 +196,82 @@ export class Dashboard extends React.Component<{}, State> {
     } = this.state;
   
     return (
-      <div className="app-shell relative h-screen w-full">
-        <Titlebar/>
-        <div className="relative h-screen w-full bg-base-200 flex items-center justify-center overflow-hidden p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row w-full max-w-7xl mx-auto transition-all duration-700 ease-in-out gap-0 sm:gap-6">
-            {/* FilesSelector Panel */}
-            <div
-              className={`
-                transition-transform duration-700 ease-in-out
-                w-full sm:w-1/2 max-w-full
-                ${filesSelected ? "sm:translate-x-0" : "sm:translate-x-[50%]"}
-                flex justify-center
-              `}
-            >
-              <div className="w-full max-w-[720px]">
-                <FilesSelector onUpdateFiles={this.handleFilesUpdate} />
-              </div>
-            </div>
-    
-            {/* Divider (only if filesSelected and on sm and up) */}
-            {filesSelected && (
-              <div className="divider lg:divider-horizontal"></div>
-            )}
-    
-            {/* RecipeConfigurator Panel (slide in from right when files exist) */}
-            <div
-              className={`
-                transition-all duration-700 ease-in-out
-                w-full sm:w-1/2
-                transform ${filesSelected ? "opacity-100 translate-x-0" : "opacity-0 sm:translate-x-[50%]"}
-                pointer-events-${filesSelected ? "auto" : "none"}
-              `}
-            >
-              {filesSelected && (
-                <div className="bg-base-200 rounded-lg shadow-lg p-4 sm:p-6 max-h-[85vh] overflow-auto text-base-content">
-                  <RecipeConfigurator
-                    onUpdateRecipe={(steps) => this.setState({ steps })}
-                  />
-
-                  <div className="mt-8 flex gap-4 justify-center w-full max-w-md mx-auto">
-                    <button
-                      className="btn btn-primary"
-                      onClick={this.openSaveEncryptModal}
-                      disabled={files.length === 0}
-                    >
-                      Save encrypt files
-                    </button>
-
-                    <button
-                      className="btn btn-secondary"
-                      onClick={this.openSaveDecryptModal}
-                      disabled={files.length === 0}
-                    >
-                      Save decrypt files
-                    </button>
+      <ModalContext.Consumer>
+        {({ showModal }) => (
+          <div className="app-shell relative h-screen w-full">
+            <Titlebar/>
+            <div className="relative h-screen w-full bg-base-200 flex items-center justify-center overflow-hidden p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row w-full max-w-7xl mx-auto transition-all duration-700 ease-in-out gap-0 sm:gap-6">
+                <div
+                  className={`
+                    transition-transform duration-700 ease-in-out
+                    w-full sm:w-1/2 max-w-full
+                    ${filesSelected ? "sm:translate-x-0" : "sm:translate-x-[50%]"}
+                    flex justify-center
+                  `}
+                >
+                  <div className="w-full max-w-[720px]">
+                    <FilesSelector onUpdateFiles={this.handleFilesUpdate} />
                   </div>
                 </div>
-              )}
+        
+                {filesSelected && (
+                  <div className="divider lg:divider-horizontal"></div>
+                )}
+        
+                <div
+                  className={`
+                    transition-all duration-700 ease-in-out
+                    w-full sm:w-1/2
+                    transform ${filesSelected ? "opacity-100 translate-x-0" : "opacity-0 sm:translate-x-[50%]"}
+                    pointer-events-${filesSelected ? "auto" : "none"}
+                  `}
+                >
+                  {filesSelected && (
+                    <div className="bg-base-200 rounded-lg shadow-lg p-4 sm:p-6 max-h-[85vh] overflow-auto text-base-content">
+                      <RecipeConfigurator
+                        onUpdateRecipe={(steps) => this.setState({ steps })}
+                      />
+
+                      <div className="mt-8 flex gap-4 justify-center w-full max-w-md mx-auto">
+                        <button
+                          className="btn btn-primary"
+                          onClick={this.openSaveEncryptModal}
+                          disabled={files.length === 0}
+                        >
+                          Encrypt files
+                        </button>
+
+                        <button
+                          className="btn btn-secondary"
+                          onClick={this.openSaveDecryptModal}
+                          disabled={files.length === 0}
+                        >
+                          Decrypt files
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+        
+              <SaveEncryptModal
+                visible={isSaveEncryptModalOpen}
+                files={files}
+                onClose={this.closeSaveEncryptModal}
+                onExport={(method: string, files: File[], folderHandle?: FileSystemDirectoryHandle) => this.onExportEncrypt(method, files, showModal, folderHandle)}
+              />
+        
+              <SaveDecryptModal
+                visible={isSaveDecryptModalOpen}
+                files={files}
+                onClose={this.closeSaveDecryptModal}
+                onExport={(method: string, files: File[], folderHandle?: FileSystemDirectoryHandle) => this.onExportDecrypt(method, files, showModal, folderHandle)}
+              />
             </div>
           </div>
-    
-          {/* Modals */}
-          <SaveEncryptModal
-            visible={isSaveEncryptModalOpen}
-            files={files}
-            onClose={this.closeSaveEncryptModal}
-            onExport={this.onExportEncrypt}
-          />
-    
-          <SaveDecryptModal
-            visible={isSaveDecryptModalOpen}
-            files={files}
-            onClose={this.closeSaveDecryptModal}
-            onExport={this.onExportDecrypt}
-          />
-        </div>
-      </div>
+        )}
+      </ModalContext.Consumer>
     );
   }
   

@@ -27,7 +27,6 @@ interface State extends Props {
   version: string;
   exportModalOpen: boolean;
   exportIncludePassphrase: boolean;
-  exportIncludeKeyFiles: boolean;
 }
 
 let idCounter = 1;
@@ -43,7 +42,6 @@ class RecipeConfigurator extends React.Component<Props, State> {
       onUpdateRecipe: props.onUpdateRecipe,
       exportModalOpen: false,
       exportIncludePassphrase: false,
-      exportIncludeKeyFiles: false,
     };
   }
 
@@ -140,16 +138,10 @@ class RecipeConfigurator extends React.Component<Props, State> {
 
   // ===== Export / Import logic (keep existing) =====
   exportRecipe = async () => {
-    const { recipeName, version, steps, exportIncludePassphrase, exportIncludeKeyFiles } = this.state;
+    const { recipeName, version, steps, exportIncludePassphrase } = this.state;
     const values = await Promise.all(steps.map(async (step) => {
       const base: any = { type: step.type, algorithm: step.algorithm, keyType: step.keyType };
       if (exportIncludePassphrase && step.keyType === "passphrase") base.passphrase = step.passphrase;
-      if (step.type === "asymmetric" && step.keyType === "keyfile" && exportIncludeKeyFiles) {
-        const exportedPublicKey = await crypto.subtle.exportKey("spki", step.publicKey!);
-        const exportedPrivateKey = await crypto.subtle.exportKey("pkcs8", step.privateKey!);
-        base.publicKey = RSAAlgorithm.arrayBufferToPem(exportedPublicKey, "public");
-        base.privateKey = RSAAlgorithm.arrayBufferToPem(exportedPrivateKey, "private");
-      }
       return base;
     }));
 
@@ -184,7 +176,7 @@ class RecipeConfigurator extends React.Component<Props, State> {
   };
 
   renderExportModal = () => {
-    const { exportModalOpen, exportIncludePassphrase, exportIncludeKeyFiles } = this.state;
+    const { exportModalOpen, exportIncludePassphrase } = this.state;
     if (!exportModalOpen) return null;
 
     return (
@@ -202,18 +194,6 @@ class RecipeConfigurator extends React.Component<Props, State> {
               className="checkbox checkbox-primary"
             />
             <span>Include Passphrases</span>
-          </label>
-
-          <label className="flex items-center gap-2 mb-4 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={exportIncludeKeyFiles}
-              onChange={(e) =>
-                this.setState({ exportIncludeKeyFiles: e.target.checked })
-              }
-              className="checkbox checkbox-primary"
-            />
-            <span>Include Key Files (content included)</span>
           </label>
 
           <div className="flex justify-end gap-2">

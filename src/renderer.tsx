@@ -7,11 +7,14 @@ import {
     RouterProvider,
   } from "react-router";
 import { Dashboard } from './pages/Dashboard';
+import { ModalProvider } from './components/notification/NotificationModalContext';
 
 const router = createBrowserRouter([
     {
       path: "/",
-      element: <Dashboard></Dashboard>,
+      element: <ModalProvider>
+        <Dashboard/>
+      </ModalProvider>
     },
 ]);
 
