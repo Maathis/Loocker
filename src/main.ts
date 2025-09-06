@@ -8,6 +8,8 @@ if (started) {
   app.quit();
 }
 
+app.disableHardwareAcceleration()
+
 let mainWindow: BrowserWindow | null = null
 
 ipcMain.handle("window-action", (_event, action: string) => {
@@ -62,7 +64,6 @@ const createWindow = () => {
     frame: false,
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : undefined,
     autoHideMenuBar: true,
-    useContentSize: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -89,6 +90,9 @@ const createWindow = () => {
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
 };
+
+app.commandLine.appendSwitch("disable-gpu");
+app.commandLine.appendSwitch("disable-software-rasterizer");
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
