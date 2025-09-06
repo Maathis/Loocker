@@ -1,9 +1,8 @@
-import './theme.css';
 import './index.css';
+import './theme.css';
 
 import { createRoot } from 'react-dom/client';
 import {
-    createBrowserRouter,
     createHashRouter,
     RouterProvider,
   } from "react-router";
