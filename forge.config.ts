@@ -13,20 +13,7 @@ const config: ForgeConfig = {
     icon: 'images/icon'
   },
   rebuildConfig: {},
-  makers: [
-    {
-      name: '@electron-forge/maker-squirrel', // Windows installer
-      config: {},
-    },
-    {
-      name: '@electron-forge/maker-deb', // Linux .deb
-      config: {},
-    },
-    {
-      name: '@electron-forge/maker-rpm', // Linux .rpm
-      config: {},
-    }
-  ],
+  makers: [new MakerSquirrel({}), new MakerZIP({}, ['darwin']), new MakerRpm({}), new MakerDeb({})],
   plugins: [
     new VitePlugin({
       // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
