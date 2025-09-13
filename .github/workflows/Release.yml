@@ -1,0 +1,83 @@
+name: Release CI
+
+on:
+  workflow_run:
+    workflows: ["Build CI"]
+    types:
+      - completed
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Get version from package.json
+      - name: Get version
+        id: get_version
+        run: |
+          echo "PACKAGE_VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_ENV
+
+      # Download Linux artifacts
+      - name: Download Linux x64
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-x64
+          path: artifacts/linux-x64
+
+      - name: Download Linux arm64
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-arm64
+          path: artifacts/linux-arm64
+
+      - name: Download Linux armv7l
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-armv7l
+          path: artifacts/linux-armv7l
+
+      # Download Windows artifacts
+      - name: Download Windows x64
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-x64
+          path: artifacts/windows-x64
+
+      - name: Download Windows ia32
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-ia32
+          path: artifacts/windows-ia32
+
+      - name: Download Windows arm64
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-arm64
+          path: artifacts/windows-arm64
+
+      # Create GitHub Release
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.PACKAGE_VERSION }}
+          name: Release v${{ env.PACKAGE_VERSION }}
+          body: "Automated release v${{ env.PACKAGE_VERSION }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload all artifacts to the release
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/linux-x64/**
+            artifacts/linux-arm64/**
+            artifacts/linux-armv7l/**
+            artifacts/windows-x64/**
+            artifacts/windows-ia32/**
+            artifacts/windows-arm64/**
