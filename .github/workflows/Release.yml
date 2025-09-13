@@ -1,0 +1,90 @@
+name: Release CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      # Linux builds
+      - name: Make Linux x64
+        if: runner.os == 'Linux'
+        run: npm run make:linux -- --arch=x64
+      - name: Upload Linux x64 artifacts
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-x64
+          path: out/make/**/*x64*
+
+      - name: Make Linux arm64
+        if: runner.os == 'Linux'
+        run: npm run make:linux -- --arch=arm64
+      - name: Upload Linux arm64 artifacts
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-arm64
+          path: out/make/**/*arm64*
+
+      - name: Make Linux armv7l
+        if: runner.os == 'Linux'
+        run: npm run make:linux -- --arch=armv7l
+      - name: Upload Linux armv7l artifacts
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-armv7l
+          path: out/make/**/*armv7l*
+
+      # Windows builds
+      - name: Make Windows x64
+        if: runner.os == 'Windows'
+        run: npm run make:windows -- --arch=x64
+      - name: Upload Windows x64
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: out/make/**/*.exe
+
+      - name: Make Windows ia32
+        if: runner.os == 'Windows'
+        run: npm run make:windows -- --arch=ia32
+      - name: Upload Windows ia32
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-ia32
+          path: out/make/**/*.exe
+
+      - name: Make Windows arm64
+        if: runner.os == 'Windows'
+        run: npm run make:windows -- --arch=arm64
+      - name: Upload Windows arm64
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-arm64
+          path: out/make/**/*.exe
