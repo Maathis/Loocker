@@ -1,6 +1,5 @@
 import React, { JSX } from "react";
 
-// Types for modal props
 export type NotificationModalType = "success" | "error" | "warning";
 
 interface NotificationModalProps {

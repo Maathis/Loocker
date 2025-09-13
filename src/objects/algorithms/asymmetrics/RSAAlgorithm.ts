@@ -3,7 +3,7 @@ import { AsymmetricAlgorithm, KeyRole } from "./AsymmetricAlgo";
 export class RSAAlgorithm extends AsymmetricAlgorithm {
 
   constructor() {
-    super("rsa", "RSA-OAEP");
+    super("RSA-OAEP");
   }
 
   async encrypt(data: Uint8Array | string): Promise<Uint8Array> {

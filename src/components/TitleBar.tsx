@@ -1,4 +1,3 @@
-import { ipcRenderer } from "electron";
 import React, { useEffect } from "react"
 
 const Titlebar: React.FC = () => {

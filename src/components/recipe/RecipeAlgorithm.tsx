@@ -21,7 +21,6 @@ export const ALGORITHMS: Record<
   }
 };
 
-
 export const KEY_TYPES: Record<KeySourceValue, { label: string }> = {
   passphrase: { label: "Passphrase" },
   keyfile: { label: "Key File" },

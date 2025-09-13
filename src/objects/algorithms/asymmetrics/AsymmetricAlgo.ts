@@ -1,4 +1,3 @@
-// types/SymmetricAlgorithm.ts
 import { EncryptionAlgorithm, KeySource } from "../EncryptionAlgorithm";
 
 export type KeyRole = "public" | "private";
@@ -10,8 +9,8 @@ export abstract class AsymmetricAlgorithm extends EncryptionAlgorithm {
   protected publicKey: CryptoKey;
   protected privateKey: CryptoKey;
 
-  constructor(value: string, label: string) {
-    super(value, label, ["keyfile"]);
+  constructor(label: string) {
+    super(label, ["keyfile"]);
   }
 
   setPublicKey(publicKey: CryptoKey) {

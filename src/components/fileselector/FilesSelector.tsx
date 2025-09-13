@@ -124,7 +124,6 @@ export default class FilesSelector extends React.Component<Props, FilesSelectorS
 
     return (
       <div className="p-4 w-full max-w-[720px] mx-auto box-border">
-        {/* Upload Box */}
         <motion.div
           initial={false}
           animate={{
@@ -146,7 +145,6 @@ export default class FilesSelector extends React.Component<Props, FilesSelectorS
           </p>
         </motion.div>
 
-        {/* Hidden File Input */}
         <input
           type="file"
           multiple
@@ -155,7 +153,6 @@ export default class FilesSelector extends React.Component<Props, FilesSelectorS
           className="hidden"
         />
 
-        {/* File List */}
         {files.length > 0 && (
           <div className="mt-6">
             <h2 className="text-lg font-semibold mb-4">Selected file(s):</h2>

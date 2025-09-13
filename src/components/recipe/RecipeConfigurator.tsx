@@ -59,7 +59,6 @@ class RecipeConfigurator extends React.Component<Props, State> {
     }
   }
 
-  // ===== Handlers (keep your existing logic) =====
   handleTypeChange = (index: number, value: string) => {
     const steps = [...this.state.steps];
     steps[index].type = value as "" | "symmetric" | "asymmetric";
@@ -136,7 +135,6 @@ class RecipeConfigurator extends React.Component<Props, State> {
   openExportModal = () => this.setState({ exportModalOpen: true });
   closeExportModal = () => this.setState({ exportModalOpen: false });
 
-  // ===== Export / Import logic (keep existing) =====
   exportRecipe = async () => {
     const { recipeName, version, steps, exportIncludePassphrase } = this.state;
     const values = await Promise.all(steps.map(async (step) => {
@@ -222,13 +220,11 @@ class RecipeConfigurator extends React.Component<Props, State> {
 
     return (
       <div className="max-w-5xl mx-auto p-6 sm:p-4 w-full">
-        {/* Header: Title + Icon Buttons */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4 mb-6">
           <h2 className="text-2xl sm:text-3xl font-bold">
             Recipe Configurator
           </h2>
 
-          {/* Icon buttons on the right */}
           <div className="flex gap-2">
             <button
               className="btn btn-sm btn-ghost p-2"
@@ -247,7 +243,6 @@ class RecipeConfigurator extends React.Component<Props, State> {
           </div>
         </div>
 
-        {/* Steps List */}
         <div className="space-y-4">
           {steps.map((step, index) => (
             <StepItem
@@ -267,7 +262,6 @@ class RecipeConfigurator extends React.Component<Props, State> {
           ))}
         </div>
 
-        {/* Centered Add Step button */}
         <div className="flex justify-center mt-4">
           <button className="btn btn-soft btn-outline" onClick={this.handleAddStep} type="button">
             Add Step

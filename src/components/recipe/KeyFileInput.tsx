@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 interface Props {
   stepIndex: number;
-  label?: string; // optional label for asymmetric keys
+  label?: string;
   onChangeFile: (fileName: string, fileContent: string) => void;
 }
 

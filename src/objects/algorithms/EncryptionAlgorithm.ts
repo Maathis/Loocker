@@ -11,7 +11,7 @@ export abstract class EncryptionAlgorithm {
 
   protected keySource: KeySource;
 
-  constructor(value: string, label: string, keySource: KeySource) {
+  constructor(label: string, keySource: KeySource) {
     this.label = label;
     this.keySource = keySource;
   }

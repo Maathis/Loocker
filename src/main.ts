@@ -3,12 +3,14 @@ import path from 'node:path';
 import fs from 'fs';
 import started from 'electron-squirrel-startup';
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+app.commandLine.appendSwitch("disable-gpu");
+app.commandLine.appendSwitch("disable-software-rasterizer");
+
+app.disableHardwareAcceleration()
+
 if (started) {
   app.quit();
 }
-
-app.disableHardwareAcceleration()
 
 let mainWindow: BrowserWindow | null = null
 
@@ -72,7 +74,6 @@ const createWindow = () => {
     },
   });
 
-  // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
@@ -86,13 +87,7 @@ const createWindow = () => {
   mainWindow.on('unmaximize', () => {
     mainWindow.webContents.send("window-unmaximized");
   });
-
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
 };
-
-app.commandLine.appendSwitch("disable-gpu");
-app.commandLine.appendSwitch("disable-software-rasterizer");
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

@@ -91,7 +91,6 @@ export const RSAContent: React.FC<Props> = ({ onGenerate }) => {
 
       {generated && generatedBase64 && (
         <div className="flex flex-col space-y-4">
-          {/* First Row: Save Buttons */}
           <div className="flex items-center space-x-2">
             <button
               className="flex-1 px-4 py-2 rounded text-center bg-primary text-primary-content transition-all"
@@ -107,7 +106,6 @@ export const RSAContent: React.FC<Props> = ({ onGenerate }) => {
             </button>
           </div>
 
-          {/* Second Row: Copy Buttons */}
           <div className="flex items-center space-x-2">
             <button
               className={`flex-1 px-4 py-2 rounded text-center transition-all ${

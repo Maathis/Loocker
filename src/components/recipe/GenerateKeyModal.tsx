@@ -2,8 +2,6 @@ import React from "react";
 import { RSAContent } from "./generateKeysContent/RSAContent";
 import { AsymmetricAlgorithms } from "./RecipeAlgorithm";
 
-// Key content components could be extended for other algorithms
-
 interface Props {
   algorithmType?: AsymmetricAlgorithms;
   isOpen: boolean;

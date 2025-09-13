@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { GripVertical, Trash2, Eye, EyeOff } from "lucide-react";
 import KeyFileInput from "./KeyFileInput";
 import { Step } from "./RecipeConfigurator";
-import { ALGORITHMS, ENCRYPTION_TYPES, KEY_TYPES } from "./RecipeAlgorithm";
-import { KeySourceValue } from "../../objects/algorithms/EncryptionAlgorithm";
+import { ALGORITHMS, ENCRYPTION_TYPES } from "./RecipeAlgorithm";
 import { GenerateKeyModal } from "./GenerateKeyModal";
 import { KeyRole } from "src/objects/algorithms/asymmetrics/AsymmetricAlgo";
 import { RSAAlgorithm } from "../../objects/algorithms/asymmetrics/RSAAlgorithm";
@@ -70,16 +69,12 @@ const StepItem: React.FC<Props> = ({
         onDragOver={onDragOver}
         onDrop={() => onDrop(index)}
       >
-        {/* GripVertical vertically centered */}
         <div className="absolute left-3 top-1/2 -translate-y-1/2 cursor-move text-base-content">
           <GripVertical className="w-5 h-5" />
         </div>
 
-        {/* Card content */}
         <div className="flex flex-col gap-3 ml-10">
-          {/* Top row: selects */}
           <div className="flex flex-wrap sm:flex-nowrap items-center justify-center gap-3 w-full">
-            {/* Encryption type */}
             <select
               className="select select-bordered w-full sm:w-40 bg-base-300 border-base-200 text-base-content"
               value={step.type}
@@ -95,7 +90,6 @@ const StepItem: React.FC<Props> = ({
               ))}
             </select>
 
-            {/* Algorithm */}
             {step.type && (
               <select
                 className="select select-bordered w-full sm:w-40 bg-base-300 border-base-200 text-base-content"
@@ -113,7 +107,6 @@ const StepItem: React.FC<Props> = ({
               </select>
             )}
 
-            {/* Key type */}
             {step.algorithm && (
               <select
                 className="select select-bordered w-full sm:w-40 bg-base-300 border-base-200 text-base-content"
@@ -134,7 +127,6 @@ const StepItem: React.FC<Props> = ({
             )}
           </div>
 
-          {/* Center row: passphrase or keyfiles */}
           <div className="flex justify-center w-full mt-2 gap-4 flex-wrap">
             {step.keyType === "passphrase" && (
               <div className="relative w-full max-w-xs">
@@ -186,7 +178,6 @@ const StepItem: React.FC<Props> = ({
             )}
           </div>
 
-          {/* Remove button */}
           <div className="flex justify-end">
             <button
               className="btn btn-sm btn-circle btn-ghost hover:bg-error hover:text-error-content text-base-content"
@@ -199,9 +190,6 @@ const StepItem: React.FC<Props> = ({
         </div>
       </div>
 
-
-
-      {/* Generate key modal */}
       <GenerateKeyModal
         algorithmType={step.algorithm}
         isOpen={isGenerateModalOpen}

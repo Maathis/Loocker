@@ -9,7 +9,7 @@ interface SaveEncryptModalProps {
 
 interface SaveEncryptModalState {
   selectedMethod: string;
-  folderHandle?: FileSystemDirectoryHandle; // For local folder handle
+  folderHandle?: FileSystemDirectoryHandle;
   folderName?: string;
   exporting: boolean;
 }
