@@ -1,10 +1,9 @@
-name: Build CI
+name: Build
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,6 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      # Setup the environment
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -26,6 +26,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Get version from package.json 
+      - name: Get version
+        id: get_version
+        run: |
+          node -e "require('fs').writeFileSync(process.env.GITHUB_ENV, 'PACKAGE_VERSION=' + require('./package.json').version + '\n', { flag: 'a' })"
+
       # Linux builds
       - name: Make Linux x64
         if: runner.os == 'Linux'
@@ -34,7 +40,7 @@ jobs:
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
-          name: linux-x64
+          name: loocker-v${{ env.PACKAGE_VERSION }}-linux-x64
           path: out/make/**/*x64*
 
       - name: Make Linux arm64
@@ -44,7 +50,7 @@ jobs:
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
-          name: linux-arm64
+          name: loocker-v${{ env.PACKAGE_VERSION }}-linux-arm64
           path: out/make/**/*arm64*
 
       - name: Make Linux armv7l
@@ -54,7 +60,7 @@ jobs:
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
-          name: linux-armv7l
+          name: loocker-v${{ env.PACKAGE_VERSION }}-linux-armv7l
           path: out/make/**/*armv7l*
 
       # Windows builds
@@ -65,8 +71,8 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: windows-x64
-          path: out/make/**/*.exe
+          name: loocker-v${{ env.PACKAGE_VERSION }}-windows-x64
+          path: out/make/**/x64/*.exe
 
       - name: Make Windows ia32
         if: runner.os == 'Windows'
@@ -75,8 +81,8 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: windows-ia32
-          path: out/make/**/*.exe
+          name: loocker-v${{ env.PACKAGE_VERSION }}-windows-ia32
+          path: out/make/**/ia32/*.exe
 
       - name: Make Windows arm64
         if: runner.os == 'Windows'
@@ -85,5 +91,5 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: windows-arm64
-          path: out/make/**/*.exe
+          name: loocker-v${{ env.PACKAGE_VERSION }}-windows-arm64
+          path: out/make/**/arm64/*.exe

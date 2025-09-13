@@ -17,10 +17,9 @@
     "test": "docker run -it --rm -v ./:/work -w /work mcr.microsoft.com/playwright:v1.54.0-noble npm run docker:test",
     "docker:test": "xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' npx playwright test"
   },
-  "keywords": [],
+  "keywords": ["electron", "security", "desktop"],
   "author": {
-    "name": "Mathis²",
-    "email": ""
+    "name": "Mathis²"
   },
   "license": "MIT",
   "devDependencies": {
