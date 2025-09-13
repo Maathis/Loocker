@@ -19,7 +19,7 @@ jobs:
       - name: Get version
         id: get_version
         run: |
-          echo "PACKAGE_VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_ENV
+          echo "PACKAGE_VERSION=$(node -p 'require(\"./package.json\").version')" >> $GITHUB_ENV
 
       # Download Linux artifacts
       - name: Download Linux x64
