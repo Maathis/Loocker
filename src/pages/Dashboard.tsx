@@ -103,6 +103,9 @@ async function exportEncryptFilesToLocalFolder(
 ) {
   if (!folderHandle) throw new Error("Folder handle is required");
 
+  let errorOccured = false;
+  let outputName = "";
+  let errorMsg = "";
   for (const file of files) {
     try {
       const encryptedFile = await encryptFileWithRecipe(file, steps);
@@ -110,10 +113,18 @@ async function exportEncryptFilesToLocalFolder(
       const writable = await fileHandle.createWritable();
       await writable.write(encryptedFile);
       await writable.close();
-      showModal("success", "File encrypted and saved", `File ${encryptedFile.name} encrypted and saved to ${folderHandle.name}`);
+      outputName = folderHandle.name;
     } catch (error) {
-      showModal("error", "Failed to encrypt or save file", `Failed to encrypt or save file ${file.name}: ${error}`);
+      errorOccured = true;
+      outputName = file.name;
+      errorMsg = error;
     }
+  }
+  
+  if(!errorOccured) {
+    showModal("success", "File(s) encrypted and saved", `File(s) encrypted and saved to ${outputName}`);
+  } else {
+    showModal("error", "Failed to encrypt or save file(s)", `Failed to encrypt or save file ${outputName} (${errorMsg})`);
   }
 }
 
@@ -125,6 +136,9 @@ async function exportDecryptFilesToLocalFolder(
 ) {
   if (!folderHandle) throw new Error("Folder handle is required");
 
+  let errorOccured = false;
+  let outputName = "";
+  let errorMsg = "";
   for (const file of files) {
     try {
       const decryptedFile = await decryptFileWithRecipe(file, steps);
@@ -132,10 +146,18 @@ async function exportDecryptFilesToLocalFolder(
       const writable = await fileHandle.createWritable();
       await writable.write(decryptedFile);
       await writable.close();
-      showModal("success", "File decrypted and saved", `File ${decryptedFile.name} decrypted and saved to ${folderHandle.name}`);
+      outputName = folderHandle.name;
     } catch (error) {
-      showModal("error", "Failed to decrypt or save file", `Failed to decrypt or save file ${file.name}: ${error}`);
+      errorOccured = true;
+      outputName = file.name;
+      errorMsg = error;
     }
+  }
+
+  if(!errorOccured) {
+    showModal("success", "File(s) decrypted and saved", `File(s) decrypted and saved to ${outputName}`);
+  } else {
+    showModal("error", "Failed to decrypt or save file(s)", `Failed to decrypt or save file ${outputName} (${errorMsg})`);
   }
 }
 
