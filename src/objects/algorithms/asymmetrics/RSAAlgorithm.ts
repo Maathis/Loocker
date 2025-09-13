@@ -53,7 +53,6 @@ export class RSAAlgorithm extends AsymmetricAlgorithm {
       .replace(/-----END [A-Z ]+-----/, "")
       .replace(/\s+/g, "");
   
-    console.log("base64 = ", base64);
     const binary = atob(base64);
     const buffer = new ArrayBuffer(binary.length);
     const view = new Uint8Array(buffer);

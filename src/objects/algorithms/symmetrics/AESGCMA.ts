@@ -19,8 +19,6 @@ export class AESGCMAlgorithm extends SymmetricAlgorithm {
   async setKey(key: Buffer) {
     const key256 = this.padKeyTo256Bits(key);
 
-    console.log("Key (hex):", EncryptionAlgorithm.toHex(key256));
-
     if (key256.length !== 32) {
       throw new Error("Key must be 32 bytes (256 bits) for AES-256-GCM.");
     }
@@ -57,14 +55,6 @@ export class AESGCMAlgorithm extends SymmetricAlgorithm {
     const result = new Uint8Array(iv.length + encryptedBytes.length);
     result.set(iv);
     result.set(encryptedBytes, iv.length);
-
-    // For the debug
-    // console.log("==== DATA FOR CYBERCHEF DECRYPTION ====");
-    // console.log("IV (hex):", EncryptionAlgorithm.toHex(iv));
-    // console.log("Ciphertext full (hex):", EncryptionAlgorithm.toHex(result));
-    // console.log("Ciphertext without tag (hex):", EncryptionAlgorithm.toHex(cipherOnly));
-    // console.log("GCM Tag (hex):", EncryptionAlgorithm.toHex(gcmTag));
-    // console.log("=======================================");
 
     return result;
   }
