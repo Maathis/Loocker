@@ -45,7 +45,7 @@ export const GenerateKeyModal: React.FC<Props> = ({
             className="btn btn-outline text-base-content border-base-300 hover:bg-base-300"
             onClick={onClose}
           >
-            Cancel
+            Close
           </button>
         </div>
       </div>

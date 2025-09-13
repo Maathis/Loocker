@@ -43,8 +43,6 @@ const StepItem: React.FC<Props> = ({
   const [isGenerateModalOpen, setGenerateModalOpen] = useState(false);
 
   const handleImportAsyncKey = async (index: number, fileName: string, fileContent: string, role: KeyRole) => {
-    console.log("handleImportAsyncKey 1")
-
     const buffer = RSAAlgorithm.pemToArrayBuffer(fileContent);
 
     const keyImported = await crypto.subtle.importKey(
@@ -54,7 +52,6 @@ const StepItem: React.FC<Props> = ({
       true,
       (role === "public" ? ["encrypt"] : ["decrypt"])
     );
-    console.log("handleImportAsyncKey 2")
 
     onKeyFileChange(index, keyImported, role);
   };

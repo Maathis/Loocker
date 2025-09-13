@@ -103,6 +103,9 @@ async function exportEncryptFilesToLocalFolder(
 ) {
   if (!folderHandle) throw new Error("Folder handle is required");
 
+  let errorOccured = false;
+  let outputName = "";
+  let errorMsg = "";
   for (const file of files) {
     try {
       const encryptedFile = await encryptFileWithRecipe(file, steps);
@@ -110,10 +113,18 @@ async function exportEncryptFilesToLocalFolder(
       const writable = await fileHandle.createWritable();
       await writable.write(encryptedFile);
       await writable.close();
-      showModal("success", "File encrypted and saved", `File ${encryptedFile.name} encrypted and saved to ${folderHandle.name}`);
+      outputName = folderHandle.name;
     } catch (error) {
-      showModal("error", "Failed to encrypt or save file", `Failed to encrypt or save file ${file.name}: ${error}`);
+      errorOccured = true;
+      outputName = file.name;
+      errorMsg = error;
     }
+  }
+  
+  if(!errorOccured) {
+    showModal("success", "File(s) encrypted and saved", `File(s) encrypted and saved to ${outputName}`);
+  } else {
+    showModal("error", "Failed to encrypt or save file(s)", `Failed to encrypt or save file ${outputName} (${errorMsg})`);
   }
 }
 
@@ -125,6 +136,9 @@ async function exportDecryptFilesToLocalFolder(
 ) {
   if (!folderHandle) throw new Error("Folder handle is required");
 
+  let errorOccured = false;
+  let outputName = "";
+  let errorMsg = "";
   for (const file of files) {
     try {
       const decryptedFile = await decryptFileWithRecipe(file, steps);
@@ -132,10 +146,18 @@ async function exportDecryptFilesToLocalFolder(
       const writable = await fileHandle.createWritable();
       await writable.write(decryptedFile);
       await writable.close();
-      showModal("success", "File decrypted and saved", `File ${decryptedFile.name} decrypted and saved to ${folderHandle.name}`);
+      outputName = folderHandle.name;
     } catch (error) {
-      showModal("error", "Failed to decrypt or save file", `Failed to decrypt or save file ${file.name}: ${error}`);
+      errorOccured = true;
+      outputName = file.name;
+      errorMsg = error;
     }
+  }
+
+  if(!errorOccured) {
+    showModal("success", "File(s) decrypted and saved", `File(s) decrypted and saved to ${outputName}`);
+  } else {
+    showModal("error", "Failed to decrypt or save file(s)", `Failed to decrypt or save file ${outputName} (${errorMsg})`);
   }
 }
 
@@ -152,10 +174,36 @@ export class Dashboard extends React.Component<{}, State> {
     };
   }
 
-  openSaveEncryptModal = () => this.setState({ isSaveEncryptModalOpen: true });
+  checkAsymmetricRequirements = (key: "public" | "private", steps: Step[]) => {
+    for (const step of steps) {
+      if(step.type == "asymmetric") {
+        if(
+          (key == "public" && !step.publicKey) || 
+          (key == "private" && !step.privateKey)
+        ) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  openSaveEncryptModal = (showModal: NotificationModalContextProps['showModal']) => { 
+    if(this.checkAsymmetricRequirements("public", this.state.steps)) {
+      this.setState({ isSaveEncryptModalOpen: true })
+    } else {
+      showModal("warning", "Missing public key", "One of the steps requires a public key to encrypt your files. Please add it");
+    }
+  }
   closeSaveEncryptModal = () => this.setState({ isSaveEncryptModalOpen: false });
 
-  openSaveDecryptModal = () => this.setState({ isSaveDecryptModalOpen: true });
+  openSaveDecryptModal = (showModal: NotificationModalContextProps['showModal']) => {
+    if(this.checkAsymmetricRequirements("private", this.state.steps)) {
+      this.setState({ isSaveDecryptModalOpen: true });
+    } else {
+      showModal("warning", "Missing private key", "One of the steps requires a private key to encrypt your files. Please add it");
+    }
+  }
   closeSaveDecryptModal = () => this.setState({ isSaveDecryptModalOpen: false });
 
   onExportEncrypt = async (method: string, files: File[], showModal: NotificationModalContextProps['showModal'], folderHandle?: FileSystemDirectoryHandle) => {
@@ -236,7 +284,7 @@ export class Dashboard extends React.Component<{}, State> {
                       <div className="mt-8 flex gap-4 justify-center w-full max-w-md mx-auto">
                         <button
                           className="btn btn-primary"
-                          onClick={this.openSaveEncryptModal}
+                          onClick={() => this.openSaveEncryptModal(showModal)}
                           disabled={files.length === 0}
                         >
                           Encrypt files
@@ -244,7 +292,7 @@ export class Dashboard extends React.Component<{}, State> {
 
                         <button
                           className="btn btn-secondary"
-                          onClick={this.openSaveDecryptModal}
+                          onClick={() => this.openSaveDecryptModal(showModal)}
                           disabled={files.length === 0}
                         >
                           Decrypt files
