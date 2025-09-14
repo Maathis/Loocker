@@ -22,6 +22,20 @@ jobs:
         run: |
           echo "PACKAGE_VERSION=$(node -p 'require("./package.json").version')" >> $GITHUB_ENV
 
+      # Create a Git tag
+      - name: Create Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag v${{ env.PACKAGE_VERSION }}"
+          git push origin v${{ env.PACKAGE_VERSION }}"
+          
+      # Download all artifacts from Build CI jobs in this workflow run
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
       # Create GitHub Release
       - name: Create GitHub Release
         id: create_release
@@ -30,19 +44,6 @@ jobs:
           tag_name: v${{ env.PACKAGE_VERSION }}
           name: Release v${{ env.PACKAGE_VERSION }}
           body: "Automated release v${{ env.PACKAGE_VERSION }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Download all artifacts from Build CI jobs in this workflow run
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
-
-      # Upload all artifacts to the release
-      - name: Upload release assets
-        uses: softprops/action-gh-release@v2
-        with:
           files: artifacts/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
