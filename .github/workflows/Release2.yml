@@ -64,7 +64,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: loocker-windows-x64
-          path: out/make/**/*.exe
+          path: out/make/**/x64/*.exe
 
       - name: Make Windows ia32
         if: runner.os == 'Windows'
@@ -74,7 +74,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: loocker-windows-ia32
-          path: out/make/**/*.exe
+          path: out/make/**/ia32/*.exe
 
       - name: Make Windows arm64
         if: runner.os == 'Windows'
@@ -84,7 +84,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: loocker-windows-arm64
-          path: out/make/**/*.exe
+          path: out/make/**/arm64/*.exe
 
   release:
     needs: build
@@ -114,7 +114,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
-
+          
+      - name: List build output
+        run: ls -R -la artifacts/
+          
       # Create GitHub Release
       - name: Create GitHub Release
         id: create_release
