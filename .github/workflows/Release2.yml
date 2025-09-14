@@ -1,0 +1,116 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    outputs:
+      linux-artifacts: ${{ steps.set-linux-artifacts.outputs.files }}
+      windows-artifacts: ${{ steps.set-windows-artifacts.outputs.files }}
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: 'npm'
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # --------------------
+      # 4. Linux builds
+      # --------------------
+      - name: Make Linux x64
+        if: runner.os == 'Linux'
+        run: npm run make:linux -- --arch=x64
+
+      - name: Make Linux arm64
+        if: runner.os == 'Linux'
+        run: npm run make:linux -- --arch=arm64
+
+      - name: Make Linux armv7l
+        if: runner.os == 'Linux'
+        run: npm run make:linux -- --arch=armv7l
+
+      # 5. Windows builds
+      - name: Make Windows x64
+        if: runner.os == 'Windows'
+        run: npm run make:windows -- --arch=x64
+
+      - name: Make Windows ia32
+        if: runner.os == 'Windows'
+        run: npm run make:windows -- --arch=ia32
+
+      - name: Make Windows arm64
+        if: runner.os == 'Windows'
+        run: npm run make:windows -- --arch=arm64
+
+      # 6. Upload artifacts
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }}-artifacts
+          path: out/make/**
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # 1. Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Get version from package.json
+      - name: Get version
+        id: get_version
+        run: |
+          echo "PACKAGE_VERSION=$(node -p 'require("./package.json").version')" >> $GITHUB_ENV
+
+      # 3. Create Git tag
+      - name: Create Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag v${{ env.PACKAGE_VERSION }}
+          git push origin v${{ env.PACKAGE_VERSION }}
+
+      # 4. Download all artifacts from build job
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ubuntu-latest-artifacts
+          path: artifacts/linux
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-latest-artifacts
+          path: artifacts/windows
+
+      # 5. Create GitHub Release with all artifacts
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.PACKAGE_VERSION }}
+          name: Release v${{ env.PACKAGE_VERSION }}
+          body: "Automated release v${{ env.PACKAGE_VERSION }}"
+          files: |
+            artifacts/linux/**
+            artifacts/windows/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
