@@ -27,8 +27,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag v${{ env.PACKAGE_VERSION }}"
-          git push origin v${{ env.PACKAGE_VERSION }}"
+          git tag v${{ env.PACKAGE_VERSION }}
+          git push origin v${{ env.PACKAGE_VERSION }}
           
       # Download all artifacts from Build CI jobs in this workflow run
       - name: Download all artifacts
